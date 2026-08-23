@@ -1,6 +1,6 @@
 # Hyperion
 
-Hyperion combines a Next.js model-routing API with an approval-gated VS Code coding agent. The web API classifies requests, filters and scores eligible models, and executes the best provider. The extension can inspect, edit, and verify the open workspace through native tool calls using OpenAI-compatible, Anthropic, GMI Cloud, or OpenRouter models.
+Hyperion combines a Next.js model-routing API with a workspace-scoped VS Code coding agent. The web API classifies requests, filters and scores eligible models, and executes the best provider. The extension can inspect, edit, and verify the open workspace through native tool calls using OpenAI-compatible, Anthropic, GMI Cloud, or OpenRouter models.
 
 ## Run the web app locally
 
@@ -49,9 +49,9 @@ Build the extension with `npm run compile`, then press `F5`. The development hos
 
 ## Agent safety
 
-Hyperion asks for approval before every workspace read, search, edit, or command. It never follows a path outside the first open workspace folder, including through existing symlinks. It always excludes `.git`, `node_modules`, and `.hyperionignore`; add a root `.hyperionignore` file for additional files or directories. The matcher supports common `*`, `**`, `?`, directory, and `!` patterns.
+Hyperion auto-approves workspace reads, searches, edits, and commands by default. Set `hyperion.autoApproveTools` to `false` to restore per-action confirmation dialogs. It never follows a path outside the first open workspace folder, including through existing symlinks. It always excludes `.git`, `node_modules`, and `.hyperionignore`; add a root `.hyperionignore` file for additional files or directories. The matcher supports common `*`, `**`, `?`, directory, and `!` patterns.
 
-Commands run from the workspace root and return capped output to the model. Treat command approval as equivalent to allowing a local shell command under your VS Code user account.
+Commands run automatically from the workspace root and return capped output to the model. Auto-approval allows shell commands to run under your VS Code user account, while the agent's path tools remain restricted to the workspace root.
 
 ## Planned, not implemented
 
@@ -60,5 +60,5 @@ Commands run from the workspace root and return capped output to the model. Trea
 - Cost and latency scoring
 - Task decomposition and live routing
 - Semantic/vector codebase indexing
-- Automated approval policies
+- Granular approval policies
 - Wiring the extension directly to the web router and multi-agent API

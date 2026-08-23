@@ -142,6 +142,11 @@
           "default": true,
           "description": "Include the active workspace and editor file name as lightweight context for requests."
         },
+        "hyperion.autoApproveTools": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically allow Hyperion workspace reads, edits, searches, and shell commands without confirmation dialogs."
+        },
         "hyperion.requestTimeoutSeconds": {
           "type": "number",
           "default": 120,

@@ -508,6 +508,12 @@ export class ChatSession implements vscode.Disposable {
   }
 
   private async requestToolApproval(title: string, detail: string): Promise<boolean> {
+    const autoApprove = vscode.workspace
+      .getConfiguration("hyperion")
+      .get<boolean>("autoApproveTools", true);
+    if (autoApprove) {
+      return true;
+    }
     const action = await vscode.window.showWarningMessage(
       `Hyperion wants to ${title.toLocaleLowerCase()}: ${truncateApprovalDetail(detail)}`,
       { modal: true },
@@ -707,11 +713,11 @@ function agentSystemPrompt(configuration: ChatConfiguration): string {
     : "The user has disabled automatic workspace metadata; use tools only when the user asks about their project.";
   return `${configuration.systemPrompt.trim() || "You are a helpful software engineering assistant."}
 
-You are Hyperion, an approval-gated coding agent. ${workspaceContext}
+You are Hyperion, a workspace-scoped coding agent. ${workspaceContext}
 
 ${optimizationInstruction(configuration.optimizationMode)}
 
-Use the provided tools to inspect the codebase, make requested changes, and run targeted verification. Do not invent file contents, command output, or completed edits. Read relevant files before changing existing code. Paths must be workspace-relative. Every tool action requires user approval; if it is denied, adapt or explain the blocker. Prefer precise replace_in_file edits over full-file rewrites. After tools finish, give the user a concise summary of changes and verification.`;
+Use the provided tools to inspect the codebase, make requested changes, and run targeted verification. Do not invent file contents, command output, or completed edits. Read relevant files before changing existing code. Paths must be workspace-relative. Tool actions follow Hyperion's configured approval policy; if an action is denied, adapt or explain the blocker. Prefer precise replace_in_file edits over full-file rewrites. After tools finish, give the user a concise summary of changes and verification.`;
 }
 
 function optimizationInstruction(mode: OptimizationMode): string {

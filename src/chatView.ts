@@ -120,7 +120,7 @@ function chatHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
         <div class="empty-mark brand-art" aria-hidden="true"><img src="${brandUri}" alt="" /></div>
         <p class="eyebrow">HYPERION / WORKSPACE ASSISTANT</p>
         <h1>Build with more context.</h1>
-        <p>Bring a file, image, or problem. Hyperion keeps your conversations and asks before every workspace action.</p>
+        <p>Bring a file, image, or problem. Hyperion keeps your conversations and scopes workspace actions to this project.</p>
         <div class="suggestion-grid">
           <button class="suggestion" type="button" data-prompt="Inspect this codebase and explain its architecture and main entry points.">
             <strong>Explain code</strong><span>Understand behavior and edge cases</span>
