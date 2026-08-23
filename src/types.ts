@@ -7,6 +7,7 @@ export interface ChatMessage {
   role: ChatRole;
   content: string;
   createdAt: number;
+  durationMs?: number;
   thinking?: string;
   attachments?: ChatAttachment[];
 }

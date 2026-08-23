@@ -43,7 +43,7 @@ Run `npm run typecheck`, `npm run build`, and `npm run benchmark` (with a provid
 
 The extension provides streaming chat, local conversation history, image and text attachments, provider reasoning traces, and settings for the active model and workspace context. It stores provider keys in VS Code SecretStorage.
 
-Run **Hyperion: Select Chat Provider**, choose OpenAI-compatible, Anthropic, GMI Cloud, or OpenRouter, then run **Hyperion: Set API Key**. GMI Cloud can use an injected model-decider result and otherwise falls back to its configured model. OpenRouter requests tool-capable routes.
+Run **Hyperion: Select Chat Provider**, choose OpenAI-compatible, Anthropic, GMI Cloud, or OpenRouter, then run **Hyperion: Set API Key**. When GMI Cloud is active, Hyperion verifies the key with GMI's account-scoped `GET /v1/models` endpoint and opens a picker containing every model available to that key; use the provider picker again any time you want to refresh it. GMI Cloud can use an injected model-decider result and otherwise uses the selected model. OpenRouter requests tool-capable routes.
 
 Build the extension with `npm run compile`, then press `F5`. The development host opens the current checkout through a relative workspace file, keeping workspace tools scoped to that repository.
 

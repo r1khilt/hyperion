@@ -70,8 +70,7 @@ export class OpenAICompatibleClient {
         body: JSON.stringify({
           model: configuration.model,
           messages: toOpenAIMessages(messages),
-          tools,
-          tool_choice: "auto",
+          ...(tools.length ? { tools, tool_choice: "auto" } : {}),
           stream: true,
           ...(configuration.maxOutputTokens > 0
             ? { max_tokens: configuration.maxOutputTokens }

@@ -102,8 +102,8 @@
         },
         "hyperion.gmiFallbackModel": {
           "type": "string",
-          "default": "deepseek-ai/DeepSeek-R1",
-          "description": "GMI Cloud model used for direct chat until a model decider is injected. A decider result overrides this value per prompt."
+          "default": "",
+          "description": "GMI Cloud model identifier. Set it from the live account-specific model picker, or enter an exact ID from GET /v1/models."
         },
         "hyperion.gmiMaxOutputTokens": {
           "type": "number",

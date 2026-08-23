@@ -186,22 +186,22 @@ function renderMessage(message) {
   article.className = `message ${message.role}`;
   article.dataset.messageId = message.id;
 
-  const avatar = document.createElement("div");
-  avatar.className = "message-avatar";
-  avatar.textContent = message.role === "assistant" ? "H" : "You";
-
   const main = document.createElement("div");
   main.className = "message-main";
+
+  if (message.role === "assistant") {
+    main.appendChild(renderWorkSummary(message));
+  }
 
   const meta = document.createElement("div");
   meta.className = "message-meta";
 
   const author = document.createElement("span");
   author.className = "message-author";
-  author.textContent = message.role === "assistant" ? "Hyperion" : "You";
+  author.textContent = "You";
   meta.appendChild(author);
 
-  if (message.content) {
+  if (message.role === "user" && message.content) {
     const copy = document.createElement("button");
     copy.className = "copy-button";
     copy.type = "button";
@@ -219,16 +219,16 @@ function renderMessage(message) {
   if (Array.isArray(message.attachments) && message.attachments.length) {
     content.appendChild(renderMessageAttachments(message.attachments));
   }
-  if (message.role === "assistant" && message.thinking && state.configuration?.showThinking) {
-    content.appendChild(renderThinking(message.thinking));
-  }
   const body = document.createElement("div");
   body.className = "message-body";
   renderMessageContent(body, message);
   content.appendChild(body);
 
-  main.append(meta, content);
-  article.append(avatar, main);
+  if (message.role === "user") {
+    main.appendChild(meta);
+  }
+  main.appendChild(content);
+  article.appendChild(main);
   return article;
 }
 
@@ -249,15 +249,81 @@ function renderMessageAttachments(attachments) {
   return list;
 }
 
-function renderThinking(thinking) {
-  const details = document.createElement("details");
-  details.className = "thinking";
-  const summary = document.createElement("summary");
-  summary.textContent = "Thinking trace";
-  const pre = document.createElement("pre");
-  pre.textContent = thinking;
-  details.append(summary, pre);
-  return details;
+function renderWorkSummary(message) {
+  const showTrace = Boolean(message.thinking && state.configuration?.showThinking);
+  const container = document.createElement(showTrace ? "details" : "div");
+  container.className = "work-summary";
+  const header = document.createElement(showTrace ? "summary" : "div");
+  header.className = "work-summary-header";
+
+  const label = document.createElement("span");
+  label.className = "work-summary-label";
+  label.dataset.messageId = message.id;
+  label.dataset.startedAt = String(message.createdAt);
+  label.textContent = workSummaryLabel(message);
+  header.appendChild(label);
+
+  if (showTrace) {
+    const chevron = document.createElement("span");
+    chevron.className = "work-summary-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.textContent = "›";
+    header.appendChild(chevron);
+  }
+
+  if (message.content) {
+    const copy = document.createElement("button");
+    copy.className = "copy-button work-copy";
+    copy.type = "button";
+    copy.textContent = "Copy";
+    copy.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      vscode.postMessage({ type: "copy", content: message.content });
+      copy.textContent = "Copied";
+      window.setTimeout(() => (copy.textContent = "Copy"), 1200);
+    });
+    header.appendChild(copy);
+  }
+
+  container.appendChild(header);
+  if (showTrace) {
+    const trace = document.createElement("div");
+    trace.className = "work-trace";
+    const traceLabel = document.createElement("span");
+    traceLabel.textContent = "Reasoning trace";
+    const pre = document.createElement("pre");
+    pre.textContent = message.thinking;
+    trace.append(traceLabel, pre);
+    container.appendChild(trace);
+  }
+  return container;
+}
+
+function workSummaryLabel(message) {
+  const active = state.isGenerating && lastAssistantMessageId() === message.id;
+  if (!active && !Number.isFinite(message.durationMs)) {
+    return "Worked";
+  }
+  const duration = Number.isFinite(message.durationMs)
+    ? message.durationMs
+    : Math.max(0, Date.now() - message.createdAt);
+  return `${active ? "Working for" : "Worked for"} ${formatDuration(duration)}`;
+}
+
+function formatDuration(durationMs) {
+  const seconds = Math.max(1, Math.round(durationMs / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return remainder ? `${minutes}m ${remainder}s` : `${minutes}m`;
+}
+
+function lastAssistantMessageId() {
+  for (let index = state.messages.length - 1; index >= 0; index -= 1) {
+    if (state.messages[index].role === "assistant") return state.messages[index].id;
+  }
+  return undefined;
 }
 
 function renderMessageContent(container, message) {
@@ -350,12 +416,21 @@ function applyThinkingDelta(id, delta) {
   if (!message) return;
   message.thinking = (message.thinking || "") + delta;
   const article = [...elements.messageList.children].find((candidate) => candidate.dataset.messageId === id);
-  const content = article?.querySelector(".message-content");
-  if (!content) return;
-  const existing = content.querySelector(".thinking pre");
-  if (existing) existing.textContent = message.thinking;
-  else content.prepend(renderThinking(message.thinking));
+  const existing = article?.querySelector(".work-summary");
+  if (!existing) return;
+  const wasOpen = existing.open;
+  const replacement = renderWorkSummary(message);
+  if (wasOpen && replacement instanceof HTMLDetailsElement) replacement.open = true;
+  existing.replaceWith(replacement);
 }
+
+window.setInterval(() => {
+  if (!state.isGenerating) return;
+  for (const label of document.querySelectorAll(".work-summary-label")) {
+    const message = state.messages.find((candidate) => candidate.id === label.dataset.messageId);
+    if (message) label.textContent = workSummaryLabel(message);
+  }
+}, 1000);
 
 function renderConfiguration() {
   const configuration = state.configuration;

@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { AnthropicClient } from "./anthropicClient";
 import { codingTools, WorkspaceToolExecutor } from "./agentTools";
 import { ApiRequestError } from "./apiError";
+import { GmiCloudClient, GmiCloudModel } from "./gmiCloudClient";
 import { ModelDecider } from "./gmiCloudEndEffector";
 import { OpenAICompatibleClient } from "./openAICompatibleClient";
 import {
@@ -28,12 +29,6 @@ const OPTIMIZATION_MODE_STORAGE_KEY = "hyperion.optimizationMode.v1";
 const MAX_AGENT_TURNS = 24;
 
 const CURATED_MODELS: Partial<Record<Provider, Array<{ label: string; description: string; model: string }>>> = {
-  "gmi-cloud": [
-    { label: "Qwen3-Coder 480B", description: "Strongest suggested coding-agent option; larger and more deliberate.", model: "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8" },
-    { label: "Qwen3-Coder 30B", description: "Faster, lower-cost coding option for everyday repository work.", model: "Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8" },
-    { label: "DeepSeek V3.2", description: "General-purpose option for agentic work outside focused coding tasks.", model: "deepseek-ai/DeepSeek-V3.2" },
-    { label: "GLM-5.1", description: "Alternative general reasoning option; use when available to your GMI Cloud account.", model: "zai-org/GLM-5.1" },
-  ],
   openrouter: [
     { label: "Claude Sonnet 4.6", description: "Balanced default for careful coding-agent work.", model: "anthropic/claude-sonnet-4.6" },
     { label: "GPT-5.4", description: "Premium option for difficult reasoning and implementation tasks.", model: "openai/gpt-5.4" },
@@ -57,6 +52,7 @@ type WebviewRequest =
 export class ChatSession implements vscode.Disposable {
   private readonly openAIClient = new OpenAICompatibleClient();
   private readonly anthropicClient = new AnthropicClient();
+  private readonly gmiCloudClient = new GmiCloudClient();
   private readonly webviews = new Set<vscode.Webview>();
   private messages: ChatMessage[];
   private history: ChatHistoryItem[];
@@ -115,8 +111,30 @@ export class ChatSession implements vscode.Disposable {
     }
 
     if (value.trim()) {
-      await this.context.secrets.store(secretKey, value.trim());
-      void vscode.window.showInformationMessage(`${providerName} API key saved securely.`);
+      if (configuration.provider === "gmi-cloud") {
+        try {
+          const models = await this.gmiCloudClient.listModels(
+            configuration.apiBaseUrl,
+            value.trim(),
+            configuration.organizationId,
+          );
+          await this.context.secrets.store(secretKey, value.trim());
+          void vscode.window.showInformationMessage(
+            `GMI Cloud API key verified. ${models.length} models are available.`,
+          );
+          await this.selectModel("gmi-cloud", models);
+        } catch (error) {
+          void vscode.window.showErrorMessage(
+            `GMI Cloud API key was not saved: ${friendlyError(error)}`,
+          );
+          return;
+        }
+      } else {
+        await this.context.secrets.store(secretKey, value.trim());
+      }
+      if (configuration.provider !== "gmi-cloud") {
+        void vscode.window.showInformationMessage(`${providerName} API key saved securely.`);
+      }
     } else {
       await this.context.secrets.delete(secretKey);
       void vscode.window.showInformationMessage(`${providerName} API key removed.`);
@@ -184,7 +202,48 @@ export class ChatSession implements vscode.Disposable {
     await this.broadcastState();
   }
 
-  private async selectModel(provider: Provider): Promise<void> {
+  private async selectModel(provider: Provider, gmiModels?: GmiCloudModel[]): Promise<void> {
+    if (provider === "gmi-cloud") {
+      let models = gmiModels;
+      if (!models) {
+        const configuration = getConfiguration();
+        const apiKey = await this.context.secrets.get(API_KEY_SECRETS[provider]);
+        if (!apiKey?.trim()) {
+          void vscode.window.showInformationMessage("Set a GMI Cloud API key to load the models available to your account.");
+          return;
+        }
+        try {
+          models = await this.gmiCloudClient.listModels(
+            configuration.apiBaseUrl,
+            apiKey,
+            configuration.organizationId,
+          );
+        } catch (error) {
+          void vscode.window.showErrorMessage(`Could not load GMI Cloud models: ${friendlyError(error)}`);
+          return;
+        }
+      }
+      const selected = await vscode.window.showQuickPick(
+        models.map((model) => ({
+          label: model.id,
+          description: model.ownedBy ? `Owned by ${model.ownedBy}` : "Available to this API key",
+          model: model.id,
+          picked: model.id === configuredModel(provider),
+        })),
+        {
+          title: "Select a GMI Cloud model",
+          placeHolder: `${models.length} models available to this API key`,
+          matchOnDescription: true,
+        },
+      );
+      if (selected) {
+        await vscode.workspace
+          .getConfiguration("hyperion")
+          .update(modelSettingKey(provider), selected.model, vscode.ConfigurationTarget.Global);
+      }
+      return;
+    }
+
     const models = CURATED_MODELS[provider];
     if (!models?.length) {
       return;
@@ -363,6 +422,7 @@ export class ChatSession implements vscode.Disposable {
       }
     } finally {
       clearTimeout(timeout);
+      assistantMessage.durationMs = Math.max(0, Date.now() - assistantMessage.createdAt);
       this.activeController = undefined;
       await this.persist();
       await this.broadcastState();
@@ -577,7 +637,7 @@ function modelSettingKey(provider: Provider): string {
 function defaultModel(provider: Provider): string {
   switch (provider) {
     case "anthropic": return "claude-sonnet-5";
-    case "gmi-cloud": return "deepseek-ai/DeepSeek-R1";
+    case "gmi-cloud": return "";
     case "openrouter": return "anthropic/claude-sonnet-4.6";
     default: return "gpt-4o-mini";
   }
