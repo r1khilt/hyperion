@@ -32,6 +32,10 @@ Open this folder in VS Code and press `F5` to launch an Extension Development Ho
 
 `data/model-pricing.json` contains a source-linked catalog spanning 50 model developers. Major-provider entries use official first-party prices, while the wider catalog uses normalized OpenRouter route prices. Prices are USD per one million tokens; provider-specific long-context and cache charges are represented where applicable.
 
+## Model latency data
+
+`data/model-latency.json` contains endpoint-specific latency and generation-throughput snapshots for the exact same provider/model set as `data/model-pricing.json`, spanning 50 model developers. Measurements keep TTFT, post-first-token throughput, end-to-end latency, hosting provider, workload, region, service tier, source, and confidence separate; unavailable metrics are `null`. Most numeric entries are rolling p50 Artificial Analysis measurements, so consumers should treat them as time-sensitive observations rather than fixed properties of a model.
+
 ## Planned, not implemented
 
 - Codebase profiling

@@ -1,0 +1,1976 @@
+{
+  "schemaVersion": 1,
+  "lastUpdated": "2026-08-23",
+  "scope": "Practical, source-linked latency and generation-throughput snapshots for the exact provider/model set in data/model-pricing.json. Values describe specific first-party, marketplace, or cross-provider endpoints and must not be treated as intrinsic model constants.",
+  "providerCount": 50,
+  "modelCount": 67,
+  "measurementCount": 68,
+  "definitions": {
+    "timeToFirstTokenMs": "Median milliseconds from request submission to the first generated token. For reasoning models that expose reasoning tokens, this is the first reasoning token.",
+    "timeToFirstTokenP95Ms": "Milliseconds at or below which 95% of first-token observations fall.",
+    "outputTokensPerSecond": "Median sustained output generation rate after the first token is received.",
+    "outputTokensPerSecondP95": "95th-percentile sustained output generation rate, only when the source defines the percentile direction clearly.",
+    "endToEndLatencyMs": "Milliseconds from request submission until the complete response is received for the stated output length.",
+    "endToEndLatencyP95Ms": "Milliseconds at or below which 95% of complete-response observations fall.",
+    "coldStartLatencyMs": "Additional or total cold-start latency reported for an endpoint with scale-to-zero behavior.",
+    "cachedTimeToFirstTokenMs": "Time to first token for a separately identified cached-input request."
+  },
+  "methodology": {
+    "summary": "Numeric entries primarily use Artificial Analysis's independently measured default API workload. First-party models represent their first-party API; open-weight models without a first-party endpoint use the median across providers. OpenRouter-linked null records preserve coverage where no stable public measurement was available.",
+    "artificialAnalysisProfile": {
+      "statistic": "p50 over the trailing 72 hours",
+      "load": "single prompt",
+      "inputTokens": "approximately 10,000, counted with tiktoken o200k_base",
+      "outputTokens": "at least 1,500 for speed and TTFT runs",
+      "benchmarkClientRegion": "Google Cloud us-central1-a",
+      "temperature": "0.6 for reasoning models; 0 for non-reasoning models unless provider-required",
+      "topP": 1
+    },
+    "nullPolicy": "Unavailable values are null, never zero. No estimates are included in this snapshot.",
+    "limitations": [
+      "Latency changes with endpoint, region, request and response length, load, caching, service tier, routing, quantization, and sampling settings.",
+      "Artificial Analysis p50 values are rolling operational snapshots and can change within hours; lastUpdated is the retrieval date, not a promise of future performance.",
+      "Cross-provider median entries are useful model-level summaries but do not describe any single deployable endpoint.",
+      "Reasoning-model TTFT can mean time to the first reasoning token, not time to the first visible answer token.",
+      "End-to-end latency is only populated where the source supplies a response length; values for different output lengths are not comparable.",
+      "OpenRouter records with all-null metrics document current catalog coverage only; callers should not use them for ranking.",
+      "p95, cold-start, and cached-input measurements are rarely published consistently and remain null unless explicitly sourced."
+    ]
+  },
+  "sources": {
+    "artificialAnalysisMethodology": "https://artificialanalysis.ai/methodology/performance-benchmarking",
+    "artificialAnalysisModels": "https://artificialanalysis.ai/models",
+    "openRouterModelsApi": "https://openrouter.ai/api/v1/models",
+    "openRouterPerformanceDocs": "https://openrouter.ai/docs/features/latency-and-performance",
+    "openRouterRoutingPercentiles": "https://openrouter.ai/docs/guides/routing/provider-selection"
+  },
+  "models": [
+    {
+      "provider": "openai",
+      "model": "gpt-5.6-sol",
+      "label": "GPT-5.6 Sol",
+      "status": "active",
+      "variant": "non-reasoning",
+      "measurements": [
+        {
+          "hostingProvider": "OpenAI",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1270,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 62.1,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/gpt-5-6-sol-non-reasoning",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: non-reasoning. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6-terra",
+      "label": "GPT-5.6 Terra",
+      "status": "active",
+      "variant": "non-reasoning",
+      "measurements": [
+        {
+          "hostingProvider": "OpenAI",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 780,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 101.7,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/gpt-5-6-terra-non-reasoning",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: non-reasoning. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "label": "GPT-5.6 Luna",
+      "status": "active",
+      "variant": "non-reasoning",
+      "measurements": [
+        {
+          "hostingProvider": "OpenAI",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 770,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 137.2,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/gpt-5-6-luna-non-reasoning",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: non-reasoning. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-fable-5",
+      "label": "Claude Fable 5",
+      "status": "active",
+      "variant": "reasoning/default",
+      "measurements": [
+        {
+          "hostingProvider": "Anthropic",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 97830,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 69.5,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/claude-fable-5",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: reasoning/default. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-5",
+      "label": "Claude Opus 5",
+      "status": "active",
+      "variant": "reasoning/default",
+      "measurements": [
+        {
+          "hostingProvider": "Anthropic",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 40660,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 55.6,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/claude-opus-5",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: reasoning/default. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5",
+      "label": "Claude Sonnet 5",
+      "status": "active",
+      "variant": "non-reasoning",
+      "measurements": [
+        {
+          "hostingProvider": "Anthropic",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1840,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 66.9,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/claude-sonnet-5-non-reasoning",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: non-reasoning. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "label": "Claude Haiku 4.5",
+      "status": "active",
+      "variant": "non-reasoning",
+      "measurements": [
+        {
+          "hostingProvider": "Anthropic",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 790,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 89.4,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/claude-4-5-haiku",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: non-reasoning. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "google",
+      "model": "gemini-3.7-flash",
+      "label": "Gemini 3.7 Flash",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/google/gemini-3.7-flash",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "google",
+      "model": "gemini-3.5-flash",
+      "label": "Gemini 3.5 Flash",
+      "status": "active",
+      "variant": "minimal reasoning",
+      "measurements": [
+        {
+          "hostingProvider": "Google",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 800,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 184.7,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/gemini-3-5-flash-minimal",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: minimal reasoning. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "google",
+      "model": "gemini-3.5-flash-lite",
+      "label": "Gemini 3.5 Flash-Lite",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/google/gemini-3.5-flash-lite",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "label": "Gemini 3.1 Flash-Lite",
+      "status": "active",
+      "variant": "preview/default reasoning",
+      "measurements": [
+        {
+          "hostingProvider": "Google",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 5390,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 334.5,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/gemini-3-1-flash-lite-preview",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: preview/default reasoning. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "google",
+      "model": "gemini-3.1-pro-preview",
+      "label": "Gemini 3.1 Pro Preview",
+      "status": "active",
+      "variant": "reasoning/default",
+      "measurements": [
+        {
+          "hostingProvider": "Google",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 34980,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 125.1,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/gemini-3-1-pro-preview",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: reasoning/default. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "xai",
+      "model": "grok-4.6",
+      "label": "Grok 4.6",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/x-ai/grok-4.6",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "xai",
+      "model": "grok-build-0.1",
+      "label": "Grok Build 0.1",
+      "status": "active",
+      "variant": "2026-06-16 snapshot",
+      "measurements": [
+        {
+          "hostingProvider": "SpaceXAI",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 580,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 60.4,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/grok-build-0-1-06-16",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: 2026-06-16 snapshot. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "label": "DeepSeek V4 Flash",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": null,
+          "serviceTier": null,
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://artificialanalysis.ai/models/deepseek-v4-flash-non-reasoning",
+          "sourceType": "artificial-analysis",
+          "confidence": "low",
+          "notes": "Artificial Analysis listed this non-reasoning variant but showed performance as N/A when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "deepseek",
+      "model": "deepseek-v4-pro",
+      "label": "DeepSeek V4 Pro",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/deepseek/deepseek-v4-pro",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "mistral",
+      "model": "mistral-large-latest",
+      "label": "Mistral Large 3",
+      "status": "active",
+      "variant": "standard",
+      "measurements": [
+        {
+          "hostingProvider": "Mistral",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1190,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 43.3,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/mistral-large-3",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: standard. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "mistral",
+      "model": "mistral-medium-latest",
+      "label": "Mistral Medium 3.5",
+      "status": "active",
+      "variant": "standard",
+      "measurements": [
+        {
+          "hostingProvider": "Mistral",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 2240,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 148.3,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/mistral-medium-3-5",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: standard. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "mistral",
+      "model": "mistral-small-latest",
+      "label": "Mistral Small 4",
+      "status": "active",
+      "variant": "non-reasoning",
+      "measurements": [
+        {
+          "hostingProvider": "Mistral",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 790,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 167.5,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/mistral-small-4-non-reasoning",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: non-reasoning. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "mistral",
+      "model": "ministral-14b-latest",
+      "label": "Ministral 3 14B",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/mistralai/ministral-14b-latest",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "mistral",
+      "model": "ministral-8b-latest",
+      "label": "Ministral 3 8B",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/mistralai/ministral-8b-latest",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "mistral",
+      "model": "ministral-3b-latest",
+      "label": "Ministral 3 3B",
+      "status": "active",
+      "variant": "standard",
+      "measurements": [
+        {
+          "hostingProvider": "Mistral",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 610,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 199.5,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/ministral-3-3b",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: standard. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "mistral",
+      "model": "codestral-latest",
+      "label": "Codestral",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/mistralai/codestral-latest",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "aion-labs",
+      "model": "aion-labs/aion-3.0-mini",
+      "label": "Aion 3.0 Mini",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/aion-labs/aion-3.0-mini",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "allenai",
+      "model": "allenai/olmo-3-32b-think",
+      "label": "OLMo 3 32B Think",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/allenai/olmo-3-32b-think",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "amazon",
+      "model": "amazon/nova-2-lite-v1",
+      "label": "Nova 2 Lite",
+      "status": "active",
+      "variant": "standard",
+      "measurements": [
+        {
+          "hostingProvider": "Amazon",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1070,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 157.6,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/nova-2-0-lite",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: standard. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "anthracite-org",
+      "model": "anthracite-org/magnum-v4-72b",
+      "label": "Magnum v4 72B",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/anthracite-org/magnum-v4-72b",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "arcee-ai",
+      "model": "arcee-ai/trinity-large-thinking",
+      "label": "Trinity Large Thinking",
+      "status": "active",
+      "variant": "reasoning; median across hosts",
+      "measurements": [
+        {
+          "hostingProvider": "Multiple (Artificial Analysis median)",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1050,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 202.9,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/trinity-large-thinking",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: reasoning; median across hosts. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "baidu",
+      "model": "baidu/ernie-4.5-vl-424b-a47b",
+      "label": "ERNIE 4.5 VL 424B A47B",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/baidu/ernie-4.5-vl-424b-a47b",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "bytedance",
+      "model": "bytedance/ui-tars-1.5-7b",
+      "label": "UI-TARS 7B",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/bytedance/ui-tars-1.5-7b",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "bytedance-seed",
+      "model": "bytedance-seed/seed-2-1-turbo",
+      "label": "Seed 2.1 Turbo",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/bytedance-seed/seed-2-1-turbo",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "cognitivecomputations",
+      "model": "cognitivecomputations/dolphin-mistral-24b-venice-edition",
+      "label": "Dolphin Mistral 24B Venice Edition",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/cognitivecomputations/dolphin-mistral-24b-venice-edition",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "cohere",
+      "model": "cohere/command-a",
+      "label": "Command A",
+      "status": "active",
+      "variant": "standard",
+      "measurements": [
+        {
+          "hostingProvider": "Cohere",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1580,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 72.3,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/command-a",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: standard. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "gryphe",
+      "model": "gryphe/mythomax-l2-13b",
+      "label": "MythoMax 13B",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/gryphe/mythomax-l2-13b",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "ibm-granite",
+      "model": "ibm-granite/granite-4.1-8b",
+      "label": "Granite 4.1 8B",
+      "status": "active",
+      "variant": "median across hosts",
+      "measurements": [
+        {
+          "hostingProvider": "Multiple (Artificial Analysis median)",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 750,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 121.4,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/granite-4-1-8b",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: median across hosts. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "inception",
+      "model": "inception/mercury-2",
+      "label": "Mercury 2",
+      "status": "active",
+      "variant": "diffusion language model",
+      "measurements": [
+        {
+          "hostingProvider": "Inception",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 3620,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 882.7,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/mercury-2",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: diffusion language model. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "inclusionai",
+      "model": "inclusionai/ling-3.0-flash",
+      "label": "Ling 3.0 Flash",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/inclusionai/ling-3.0-flash",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "kwaipilot",
+      "model": "kwaipilot/kat-coder-pro-v2",
+      "label": "KAT-Coder Pro V2",
+      "status": "active",
+      "variant": "coding; median across hosts",
+      "measurements": [
+        {
+          "hostingProvider": "Multiple (Artificial Analysis median)",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1400,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 106.8,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/kat-coder-pro-v2",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: coding; median across hosts. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "mancer",
+      "model": "mancer/weaver",
+      "label": "Weaver Alpha",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/mancer/weaver",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "meituan",
+      "model": "meituan/longcat-2.0",
+      "label": "LongCat 2.0",
+      "status": "active",
+      "variant": "median across hosts",
+      "measurements": [
+        {
+          "hostingProvider": "Multiple (Artificial Analysis median)",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 2560,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 44.2,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/longcat-2-0",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: median across hosts. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "meta",
+      "model": "meta/muse-spark-1.2",
+      "label": "Muse Spark 1.2",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/meta/muse-spark-1.2",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "meta-llama",
+      "model": "meta-llama/llama-4-maverick",
+      "label": "Llama 4 Maverick",
+      "status": "active",
+      "variant": "median across hosts",
+      "measurements": [
+        {
+          "hostingProvider": "Multiple (Artificial Analysis median)",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 930,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 97.5,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/llama-4-maverick",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: median across hosts. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "microsoft",
+      "model": "microsoft/phi-4",
+      "label": "Phi 4",
+      "status": "active",
+      "variant": "standard",
+      "measurements": [
+        {
+          "hostingProvider": "Microsoft",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 2450,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 41.8,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/phi-4",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: standard. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "minimax",
+      "model": "minimax/minimax-m3",
+      "label": "MiniMax M3",
+      "status": "active",
+      "variant": "first-party",
+      "measurements": [
+        {
+          "hostingProvider": "MiniMax",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1330,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 105,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/minimax-m3",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: first-party. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        },
+        {
+          "hostingProvider": "Together AI",
+          "serviceTier": "serverless",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 748.486,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 118.021,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": 21931.162,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/minimax-m3/providers",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Provider-specific p50 snapshot. End-to-end is Artificial Analysis's published time to 500 output tokens and is not comparable to arbitrary response lengths. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "moonshotai",
+      "model": "moonshotai/kimi-k3",
+      "label": "Kimi K3",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/moonshotai/kimi-k3",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "morph",
+      "model": "morph/morph-v3-large",
+      "label": "Morph V3 Large",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/morph/morph-v3-large",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "nex-agi",
+      "model": "nex-agi/nex-n2-pro",
+      "label": "Nex N2 Pro",
+      "status": "active",
+      "variant": "median across hosts",
+      "measurements": [
+        {
+          "hostingProvider": "Multiple (Artificial Analysis median)",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1560,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 140.2,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/nex-n2-pro",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: median across hosts. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "nousresearch",
+      "model": "nousresearch/hermes-4-70b",
+      "label": "Hermes 4 70B",
+      "status": "active",
+      "variant": "non-reasoning; median across hosts",
+      "measurements": [
+        {
+          "hostingProvider": "Multiple (Artificial Analysis median)",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1400,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 81.2,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/hermes-4-llama-3-1-70b",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: non-reasoning; median across hosts. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "label": "Nemotron 3 Ultra",
+      "status": "active",
+      "variant": "median across hosts",
+      "measurements": [
+        {
+          "hostingProvider": "Multiple (Artificial Analysis median)",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 1730,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 140.1,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-ultra-550b-a55b",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: median across hosts. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "perceptron",
+      "model": "perceptron/perceptron-mk1",
+      "label": "Perceptron Mk1",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/perceptron/perceptron-mk1",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "perplexity",
+      "model": "perplexity/sonar-pro-search",
+      "label": "Sonar Pro Search",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/perplexity/sonar-pro-search",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "poolside",
+      "model": "poolside/laguna-s-2.1",
+      "label": "Laguna S 2.1",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/poolside/laguna-s-2.1",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "model": "qwen/qwen3.8-max",
+      "label": "Qwen3.8 Max",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/qwen/qwen3.8-max",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "rekaai",
+      "model": "rekaai/reka-edge",
+      "label": "Reka Edge",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/rekaai/reka-edge",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "relace",
+      "model": "relace/relace-search",
+      "label": "Relace Search",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/relace/relace-search",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "sakana",
+      "model": "sakana/sakana-namazu",
+      "label": "Sakana Namazu",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/sakana/sakana-namazu",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "sao10k",
+      "model": "sao10k/l3.3-euryale-70b",
+      "label": "Llama 3.3 Euryale 70B",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/sao10k/l3.3-euryale-70b",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "stealth",
+      "model": "stealth/ox-alpha",
+      "label": "Ox Alpha",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/stealth/ox-alpha",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "stepfun",
+      "model": "stepfun/step-3.7-flash",
+      "label": "Step 3.7 Flash",
+      "status": "active",
+      "variant": "standard",
+      "measurements": [
+        {
+          "hostingProvider": "StepFun",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 2760,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 136.6,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/step-3-7-flash",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: standard. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "tencent",
+      "model": "tencent/hy3-preview",
+      "label": "HY3 Preview",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": null,
+          "serviceTier": null,
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://artificialanalysis.ai/models/hy3-non-reasoning",
+          "sourceType": "artificial-analysis",
+          "confidence": "low",
+          "notes": "Artificial Analysis listed the non-reasoning preview but showed performance as N/A when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "thedrummer",
+      "model": "thedrummer/cydonia-24b-v4.1",
+      "label": "Cydonia 24B V4.1",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/thedrummer/cydonia-24b-v4.1",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "thinkingmachines",
+      "model": "thinkingmachines/inkling",
+      "label": "Inkling",
+      "status": "active",
+      "variant": "standard",
+      "measurements": [
+        {
+          "hostingProvider": "Thinking Machines",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 2390,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 65.3,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/inkling",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: standard. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "undi95",
+      "model": "undi95/remm-slerp-l2-13b",
+      "label": "ReMM SLERP 13B",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/undi95/remm-slerp-l2-13b",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "upstage",
+      "model": "upstage/solar-pro4",
+      "label": "Solar Pro 4",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/upstage/solar-pro4",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "writer",
+      "model": "writer/palmyra-x5",
+      "label": "Palmyra X5",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/writer/palmyra-x5",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    },
+    {
+      "provider": "xiaomi",
+      "model": "xiaomi/mimo-v2.5-pro",
+      "label": "MiMo V2.5 Pro",
+      "status": "active",
+      "variant": "non-reasoning",
+      "measurements": [
+        {
+          "hostingProvider": "Xiaomi",
+          "serviceTier": "standard-public-endpoint",
+          "measurementRegion": "GCP us-central1-a (benchmark client)",
+          "timeToFirstTokenMs": 3850,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": 45.9,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": 10000,
+          "outputTokens": 1500,
+          "measuredAt": "2026-08-23",
+          "source": "https://artificialanalysis.ai/models/mimo-v2-5-pro-non-reasoning",
+          "sourceType": "artificial-analysis",
+          "confidence": "high",
+          "notes": "Artificial Analysis default workload: p50 over the trailing 72 hours, approximately 10k input tokens and at least 1.5k output tokens, single prompt. Variant: non-reasoning. Throughput is measured after the first token. Snapshot retrieved 2026-08-23."
+        }
+      ]
+    },
+    {
+      "provider": "z-ai",
+      "model": "z-ai/glm-5.3",
+      "label": "GLM 5.3",
+      "status": "active",
+      "measurements": [
+        {
+          "hostingProvider": "OpenRouter (provider routing)",
+          "serviceTier": "serverless",
+          "measurementRegion": null,
+          "timeToFirstTokenMs": null,
+          "timeToFirstTokenP95Ms": null,
+          "outputTokensPerSecond": null,
+          "outputTokensPerSecondP95": null,
+          "endToEndLatencyMs": null,
+          "endToEndLatencyP95Ms": null,
+          "coldStartLatencyMs": null,
+          "cachedTimeToFirstTokenMs": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "measuredAt": null,
+          "source": "https://openrouter.ai/models/z-ai/glm-5.3",
+          "sourceType": "openrouter",
+          "confidence": "low",
+          "notes": "Model availability is source-linked, but the source did not expose a stable non-null latency measurement when retrieved 2026-08-23; metrics are intentionally null."
+        }
+      ]
+    }
+  ]
+}
