@@ -27,6 +27,10 @@ npm run compile
 
 Open this folder in VS Code and press `F5` to launch an Extension Development Host. Run `Hyperion: Open Chat` from the Command Palette.
 
+## Model pricing data
+
+`data/model-pricing.json` contains a source-linked catalog spanning 50 model developers. Major-provider entries use official first-party prices, while the wider catalog uses normalized OpenRouter route prices. Prices are USD per one million tokens; provider-specific long-context and cache charges are represented where applicable.
+
 ## Planned, not implemented
 
 - Codebase profiling
