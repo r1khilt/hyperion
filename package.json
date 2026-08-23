@@ -1,0 +1,71 @@
+{
+  "name": "hyperion",
+  "displayName": "Hyperion",
+  "description": "A model-agnostic intelligence layer for software engineering.",
+  "version": "0.0.1",
+  "publisher": "hyperion",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:hyperion.openDashboard",
+    "onCommand:hyperion.analyzeWorkspace",
+    "onView:hyperion.overview"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "hyperion.openDashboard",
+        "title": "Hyperion: Open Dashboard"
+      },
+      {
+        "command": "hyperion.analyzeWorkspace",
+        "title": "Hyperion: Analyze Workspace"
+      }
+    ],
+    "configuration": {
+      "title": "Hyperion",
+      "properties": {
+        "hyperion.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the Hyperion status bar entry."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "hyperion",
+          "title": "Hyperion",
+          "icon": "media/hyperion.svg"
+        }
+      ]
+    },
+    "views": {
+      "hyperion": [
+        {
+          "id": "hyperion.overview",
+          "name": "Overview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "prepublishOnly": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/vscode": "^1.95.0",
+    "@vscode/vsce": "^3.2.1",
+    "typescript": "^5.7.2"
+  }
+}
