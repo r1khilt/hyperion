@@ -62,3 +62,4 @@ Commands run automatically from the workspace root and return capped output to t
 - Semantic/vector codebase indexing
 - Granular approval policies
 - Wiring the extension directly to the web router and multi-agent API
+hi
