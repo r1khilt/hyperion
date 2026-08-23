@@ -1,0 +1,13 @@
+{
+  "fineTunes": [
+    {
+      "id": "support-assistant-v1",
+      "baseModel": "openai/gpt-4o-mini",
+      "displayName": "Support assistant v1",
+      "status": "ready",
+      "metrics": { "intelligence": 74, "speed": 87, "efficiency": 94, "optimization": 92 },
+      "specializations": ["support", "knowledge-base", "structured-output"],
+      "notes": "Registry-only example. Add a provider-deployed model identifier to the model catalog before it can be selected for a run."
+    }
+  ]
+}

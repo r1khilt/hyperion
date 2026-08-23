@@ -1,0 +1,13 @@
+import catalog from "@/data/models/catalog.json";
+import { ModelCandidate, ModelProfile } from "./types";
+
+export const modelRegistry: ModelProfile[] = catalog.models as ModelProfile[];
+/* Add or replace models in data/models/catalog.json. The router and UI consume this single source. */
+export const legacyModelRegistry: ModelProfile[] = [
+  { id: "openai/gpt-4o-mini", provider: "openai", model: "gpt-4o-mini", capabilities: { coding:.72, reasoning:.7, writing:.78, math:.68, research:.65, vision:.65, toolUse:.75, longContext:.65, instructionFollowing:.78 }, supports:{vision:true,tools:true,structuredOutput:true,reasoningControl:false}, contextWindow:128000, pricing:{inputPerMillion:.15,outputPerMillion:.6}, typicalLatencyMs:1300,reliability:.96, configurations:[{id:"standard",temperature:.2}] },
+  { id: "openai/gpt-4o", provider: "openai", model: "gpt-4o", capabilities: { coding:.88, reasoning:.86, writing:.9, math:.82, research:.83, vision:.9, toolUse:.88, longContext:.78, instructionFollowing:.9 }, supports:{vision:true,tools:true,structuredOutput:true,reasoningControl:false}, contextWindow:128000, pricing:{inputPerMillion:2.5,outputPerMillion:10}, typicalLatencyMs:2800,reliability:.98, configurations:[{id:"focused",temperature:.1},{id:"creative",temperature:.7}] },
+  { id: "anthropic/claude-3-5-sonnet-latest", provider: "anthropic", model: "claude-3-5-sonnet-latest", capabilities: { coding:.92, reasoning:.9, writing:.91, math:.84, research:.86, vision:.82, toolUse:.88, longContext:.9, instructionFollowing:.92 }, supports:{vision:true,tools:true,structuredOutput:false,reasoningControl:false}, contextWindow:200000, pricing:{inputPerMillion:3,outputPerMillion:15}, typicalLatencyMs:3100,reliability:.98, configurations:[{id:"standard",temperature:.2}] },
+  { id: "google/gemini-1.5-flash", provider: "google", model: "gemini-1.5-flash", capabilities: { coding:.74, reasoning:.72, writing:.76, math:.7, research:.72, vision:.8, toolUse:.7, longContext:.95, instructionFollowing:.76 }, supports:{vision:true,tools:true,structuredOutput:true,reasoningControl:false}, contextWindow:1_000_000, pricing:{inputPerMillion:.075,outputPerMillion:.3}, typicalLatencyMs:1500,reliability:.94, configurations:[{id:"standard",temperature:.2}] },
+];
+export function expandCandidates(profiles = modelRegistry): ModelCandidate[] { return profiles.flatMap(profile => (profile.configurations?.length ? profile.configurations : [{ id: "default" }]).map(configuration => ({ profile, configuration, id: `${profile.id}:${configuration.id}` }))); }
+export function findCandidate(id: string): ModelCandidate | undefined { return expandCandidates().find(c => c.profile.id === id || c.id === id); }

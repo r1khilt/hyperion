@@ -1,0 +1,12 @@
+import { z } from "zod";
+export const optimizationModeSchema = z.enum(["quality", "balanced", "speed", "cost"]);
+export const taskAnalysisSchema = z.object({
+  primaryTask: z.enum(["coding", "math", "reasoning", "writing", "research", "extraction", "summarization", "conversation", "vision", "agentic", "other"]), subtask: z.string(),
+  difficulty: z.number().min(0).max(1), reasoningRequired: z.number().min(0).max(1), creativityRequired: z.number().min(0).max(1), codingRequired: z.number().min(0).max(1), factualAccuracyImportance: z.number().min(0).max(1), contextRequirement: z.number().min(0).max(1),
+  expectedOutputLength: z.enum(["short", "medium", "long"]), visionRequired: z.boolean(), toolUseRequired: z.boolean(), structuredOutputRequired: z.boolean(), latencySensitivity: z.enum(["low", "medium", "high"]), errorCost: z.enum(["low", "medium", "high"]), likelySpecializations: z.array(z.string()), confidence: z.number().min(0).max(1),
+});
+const constraints = z.object({ max_cost_usd: z.number().positive().optional(), max_latency_ms: z.number().positive().optional(), allowed_models: z.array(z.string()).optional(), blocked_models: z.array(z.string()).optional() }).optional();
+const agentSchema = z.object({ id: z.string().min(1).max(50), role: z.enum(["researcher", "analyst", "critic", "writer", "coder", "synthesizer"]), modelId: z.string().optional(), instructions: z.string().max(4000).optional() });
+const executionSchema = z.object({ mode: z.enum(["route", "manual", "multi-agent"]).default("route"), modelId: z.string().optional(), agents: z.array(agentSchema).min(1).max(6).optional() }).superRefine((value, ctx) => { if (value.mode === "manual" && !value.modelId) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "A model is required in manual mode." }); if (value.mode === "multi-agent" && !value.agents?.length) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Add at least one agent to a multi-agent run." }); });
+export const routeRequestSchema = z.object({ prompt: z.string().min(1).max(200_000), optimize: optimizationModeSchema.default("balanced"), constraints, execution: executionSchema.optional(), routing: z.object({ show_reason: z.boolean().default(true) }).optional() });
+export const compareRequestSchema = z.object({ prompt: z.string().min(1).max(200_000), models: z.array(z.string()).min(1).max(10), optimize: optimizationModeSchema.default("balanced"), evaluation: z.boolean().default(false) });

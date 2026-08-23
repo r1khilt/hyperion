@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "id": "openai/gpt-4o-mini",
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "displayName": "GPT-4o mini",
+      "metrics": { "intelligence": 70, "speed": 88, "efficiency": 96, "optimization": 84 },
+      "capabilities": { "coding": 0.72, "reasoning": 0.7, "writing": 0.78, "math": 0.68, "research": 0.65, "vision": 0.65, "toolUse": 0.75, "longContext": 0.65, "instructionFollowing": 0.78 },
+      "supports": { "vision": true, "tools": true, "structuredOutput": true, "reasoningControl": false },
+      "contextWindow": 128000, "pricing": { "inputPerMillion": 0.15, "outputPerMillion": 0.6 }, "typicalLatencyMs": 1300, "reliability": 0.96,
+      "configurations": [{ "id": "standard", "temperature": 0.2 }]
+    },
+    {
+      "id": "openai/gpt-4o",
+      "provider": "openai",
+      "model": "gpt-4o",
+      "displayName": "GPT-4o",
+      "metrics": { "intelligence": 88, "speed": 62, "efficiency": 68, "optimization": 86 },
+      "capabilities": { "coding": 0.88, "reasoning": 0.86, "writing": 0.9, "math": 0.82, "research": 0.83, "vision": 0.9, "toolUse": 0.88, "longContext": 0.78, "instructionFollowing": 0.9 },
+      "supports": { "vision": true, "tools": true, "structuredOutput": true, "reasoningControl": false },
+      "contextWindow": 128000, "pricing": { "inputPerMillion": 2.5, "outputPerMillion": 10 }, "typicalLatencyMs": 2800, "reliability": 0.98,
+      "configurations": [{ "id": "focused", "temperature": 0.1 }, { "id": "creative", "temperature": 0.7 }]
+    },
+    {
+      "id": "anthropic/claude-sonnet-4-20250514",
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-20250514",
+      "displayName": "Claude Sonnet 4",
+      "metrics": { "intelligence": 91, "speed": 58, "efficiency": 64, "optimization": 90 },
+      "capabilities": { "coding": 0.92, "reasoning": 0.9, "writing": 0.91, "math": 0.84, "research": 0.86, "vision": 0.82, "toolUse": 0.88, "longContext": 0.9, "instructionFollowing": 0.92 },
+      "supports": { "vision": true, "tools": true, "structuredOutput": false, "reasoningControl": false },
+      "contextWindow": 200000, "pricing": { "inputPerMillion": 3, "outputPerMillion": 15 }, "typicalLatencyMs": 3100, "reliability": 0.98,
+      "configurations": [{ "id": "standard", "temperature": 0.2 }]
+    },
+    {
+      "id": "google/gemini-1.5-flash",
+      "provider": "google",
+      "model": "gemini-1.5-flash",
+      "displayName": "Gemini 1.5 Flash",
+      "metrics": { "intelligence": 72, "speed": 86, "efficiency": 98, "optimization": 89 },
+      "capabilities": { "coding": 0.74, "reasoning": 0.72, "writing": 0.76, "math": 0.7, "research": 0.72, "vision": 0.8, "toolUse": 0.7, "longContext": 0.95, "instructionFollowing": 0.76 },
+      "supports": { "vision": true, "tools": true, "structuredOutput": true, "reasoningControl": false },
+      "contextWindow": 1000000, "pricing": { "inputPerMillion": 0.075, "outputPerMillion": 0.3 }, "typicalLatencyMs": 1500, "reliability": 0.94,
+      "configurations": [{ "id": "standard", "temperature": 0.2 }]
+    }
+  ]
+}

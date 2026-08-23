@@ -1,0 +1,6 @@
+import { isModelAvailable } from "../providers";
+import { ModelCandidate, TaskAnalysis } from "../types";
+export interface RouteConstraints { max_cost_usd?: number; max_latency_ms?: number; allowed_models?: string[]; blocked_models?: string[]; }
+export function filterCandidates(candidates: ModelCandidate[], task: TaskAnalysis, constraints: RouteConstraints, estimatedCost: (c: ModelCandidate) => number, estimatedLatency: (c: ModelCandidate) => number): ModelCandidate[] {
+  return candidates.filter(c => isModelAvailable(c.profile.provider) && (!task.visionRequired || c.profile.supports.vision) && (!task.toolUseRequired || c.profile.supports.tools) && (!task.structuredOutputRequired || c.profile.supports.structuredOutput) && c.profile.contextWindow >= Math.ceil(task.contextRequirement * 200_000) && (!constraints.allowed_models?.length || constraints.allowed_models.includes(c.profile.id) || constraints.allowed_models.includes(c.id)) && !constraints.blocked_models?.includes(c.profile.id) && !constraints.blocked_models?.includes(c.id) && (!constraints.max_cost_usd || estimatedCost(c) <= constraints.max_cost_usd) && (!constraints.max_latency_ms || estimatedLatency(c) <= constraints.max_latency_ms));
+}

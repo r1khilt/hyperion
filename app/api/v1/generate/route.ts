@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server"; import { routeRequestSchema } from "@/src/lib/schemas"; import { generate } from "@/src/lib/generate";
+export async function POST(request:Request){try{const body=routeRequestSchema.parse(await request.json());return NextResponse.json(await generate(body.prompt,body.optimize,body.constraints,body.execution));}catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Generation failed"},{status:400});}}

@@ -1,0 +1,4 @@
+import { z } from "zod";
+export const judgeResultSchema=z.object({correctness:z.number().min(0).max(1),instructionFollowing:z.number().min(0).max(1),completeness:z.number().min(0).max(1),relevance:z.number().min(0).max(1),clarity:z.number().min(0).max(1),overallScore:z.number().min(0).max(1),criticalError:z.boolean(),conciseReason:z.string()}); export type JudgeResult=z.infer<typeof judgeResultSchema>;
+export const JUDGE_SYSTEM_PROMPT="You are an impartial evaluator of AI responses. Evaluate correctness, instruction following, completeness, relevance, and clarity from 0 to 1. Return only structured JSON. Do not reward verbosity or confidence. If code is involved, prioritize whether it works.";
+export async function judgeOutput():Promise<JudgeResult|undefined>{ return undefined; } // Opt-in provider-backed judge belongs here; it is disabled by default.

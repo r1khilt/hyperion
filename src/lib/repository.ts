@@ -1,0 +1,11 @@
+import { createHash, randomUUID } from "crypto";
+export interface RequestRecord { id:string; prompt:string; promptHash:string; primaryTask:string; subtask:string; taskAnalysis:unknown; optimizationMode:string; createdAt:Date; }
+export interface ModelRunRecord { id:string; requestId:string; provider:string; model:string; configuration:unknown; latencyMs:number; inputTokens:number; outputTokens:number; estimatedCost:number; actualCost:number; output:string; success:boolean; error?:string; createdAt:Date; }
+export interface RoutingDecisionRecord { id:string; requestId:string; selectedModel:string; selectedConfiguration:unknown; score:number; confidence:number; candidateScores:unknown; reason:string; createdAt:Date; }
+export interface RouterRepository { logRequest(data: Omit<RequestRecord,"id"|"promptHash"|"createdAt">): Promise<RequestRecord>; logDecision(data: Omit<RoutingDecisionRecord,"id"|"createdAt">): Promise<RoutingDecisionRecord>; logRun(data: Omit<ModelRunRecord,"id"|"createdAt">): Promise<ModelRunRecord>; }
+class InMemoryRepository implements RouterRepository { requests:RequestRecord[]=[]; decisions:RoutingDecisionRecord[]=[]; runs:ModelRunRecord[]=[]; async logRequest(data:Omit<RequestRecord,"id"|"promptHash"|"createdAt">){const r={...data,id:`req_${randomUUID()}`,promptHash:createHash("sha256").update(data.prompt).digest("hex"),createdAt:new Date()};this.requests.push(r);return r;} async logDecision(data:Omit<RoutingDecisionRecord,"id"|"createdAt">){const r={...data,id:`decision_${randomUUID()}`,createdAt:new Date()};this.decisions.push(r);return r;} async logRun(data:Omit<ModelRunRecord,"id"|"createdAt">){const r={...data,id:`run_${randomUUID()}`,createdAt:new Date()};this.runs.push(r);return r;} }
+export const repository: RouterRepository = new InMemoryRepository();
+// PostgresRepository can implement RouterRepository when DATABASE_URL is configured.
+export interface HistoricalPerformanceRepository { getCandidatePrior(candidateId:string, task:unknown): Promise<number | undefined>; }
+export interface SimilarPromptRetriever { retrieve(prompt:string): Promise<Array<{ promptHash:string; score:number }>>; }
+export interface BenchmarkRepository { record(result:unknown): Promise<void>; }

@@ -1,0 +1,13 @@
+import { taskAnalysisSchema } from "../schemas";
+import { TaskAnalysis } from "../types";
+const clamp = (n: number) => Math.max(0, Math.min(1, n));
+export const ANALYZER_SYSTEM_PROMPT = "You are a task-analysis component inside an AI model routing system. Analyze the user's request. Do not answer it. Return only valid JSON with primaryTask, subtask, difficulty, reasoningRequired, creativityRequired, codingRequired, factualAccuracyImportance, contextRequirement, expectedOutputLength, visionRequired, toolUseRequired, structuredOutputRequired, latencySensitivity, errorCost, likelySpecializations, confidence. Numeric values are 0 to 1. Do not recommend a model.";
+export function fallbackTaskAnalysis(prompt: string): TaskAnalysis {
+  const lower = prompt.toLowerCase(); const coding = /\b(code|implement|typescript|python|javascript|bug|api|function|algorithm)\b/.test(lower); const math = /\b(math|calculate|proof|equation|statistics)\b/.test(lower); const vision = /\b(image|screenshot|photo|diagram)\b/.test(lower); const research = /\b(research|cite|sources|latest|current)\b/.test(lower);
+  const reasoning = /\b(explain|why|design|compare|analy[sz]e|plan|architecture|algorithm)\b/.test(lower);
+  return { primaryTask: vision ? "vision" : coding ? "coding" : math ? "math" : research ? "research" : reasoning ? "reasoning" : "writing", subtask: coding ? "software_implementation" : math ? "problem_solving" : research ? "information_synthesis" : "general", difficulty: clamp(prompt.length / 3000 + (reasoning ? .25 : .1)), reasoningRequired: reasoning || math ? .8 : .35, creativityRequired: /\b(write|brainstorm|creative)\b/.test(lower) ? .8 : .25, codingRequired: coding ? .9 : 0, factualAccuracyImportance: research || math ? .85 : .5, contextRequirement: clamp(prompt.length / 12000), expectedOutputLength: prompt.length > 1200 ? "long" : prompt.length > 250 ? "medium" : "short", visionRequired: vision, toolUseRequired: /\b(search|browse|tool|website)\b/.test(lower), structuredOutputRequired: /\b(json|schema|structured)\b/.test(lower), latencySensitivity: /\b(quick|fast|urgent)\b/.test(lower) ? "high" : "medium", errorCost: /\b(production|security|medical|legal|financial)\b/.test(lower) ? "high" : "medium", likelySpecializations: [coding ? "coding" : reasoning ? "reasoning" : "writing"], confidence: .62 };
+}
+export async function analyzeTask(prompt: string): Promise<TaskAnalysis> {
+  // A local fallback is deliberately reliable; an LLM analyzer can be added via an adapter without changing router behavior.
+  return taskAnalysisSchema.parse(fallbackTaskAnalysis(prompt));
+}

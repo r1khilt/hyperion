@@ -1,4 +1,8 @@
 node_modules/
 out/
+.next/
+.env
+.env.local
+*.tsbuildinfo
 *.vsix
 .DS_Store

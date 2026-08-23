@@ -1,86 +1,44 @@
 # Hyperion
 
-Hyperion provides a streaming chat foundation for a dynamic multi-model software-engineering agent. It can talk to a configurable OpenAI-compatible endpoint, Anthropic's native Messages API, or execute a model decider's result through GMI Cloud.
+Hyperion is a Next.js model-routing API and polished developer demo. It classifies a request, deterministically filters provider/model configurations, scores eligible candidates across quality, reliability, cost, and latency, then executes the best available provider.
 
-## Current surfaces
-
-- A streaming chat in the Hyperion activity-bar view and an optional editor panel.
-- Conversation history stored locally in VS Code workspace state.
-- Stop generation, new chat, message/code copying, and provider error handling.
-- OpenAI-compatible, Anthropic, and GMI Cloud provider settings, models, system prompt, and timeout.
-- Separate provider API keys stored through VS Code SecretStorage rather than settings or source files.
-- A typed GMI Cloud end effector that accepts a prompt plus the decider's exact GMI model identifier, streams the request, and returns the complete response.
-
-## Configure a provider
-
-1. Run **Hyperion: Select Chat Provider** and choose OpenAI-compatible, Anthropic, or GMI Cloud.
-2. Run **Hyperion: Set API Key** and enter the key for the selected provider. Anonymous OpenAI-compatible local endpoints can skip this step.
-3. Open VS Code settings and search for **Hyperion** to set provider-specific API base URLs and model identifiers.
-4. Run **Hyperion: Open Chat** or select the Hyperion activity-bar icon.
-
-The OpenAI-compatible default base URL is `https://api.openai.com/v1`; Hyperion appends `/chat/completions` automatically. The Anthropic default is `https://api.anthropic.com/v1`; Hyperion appends `/messages` automatically.
-
-## Configure GMI Cloud
-
-1. In the Extension Development Host, run **Hyperion: Select Chat Provider** and select **GMI Cloud**.
-2. Run **Hyperion: Set API Key** and paste your GMI Cloud API key into the password input. This is the only place you need to enter it. The key is stored in VS Code SecretStorage and is not written to this repository.
-3. Optionally set **Hyperion › Gmi: Organization Id** if your GMI account uses multi-organization access.
-4. Until the model decider is connected, set **Hyperion › Gmi: Fallback Model** to an exact model ID available to your GMI account.
-
-Hyperion uses GMI's OpenAI-compatible `https://api.gmi-serving.com/v1/chat/completions` endpoint with Bearer authentication. See the [GMI Cloud LLM API reference](https://docs.gmicloud.ai/inference-engine/api-reference/llm-api-reference).
-
-## Connect the model decider
-
-The integration boundary is intentionally small. A decider supplies the exact GMI model identifier:
-
-```ts
-import { ModelDecider } from "./gmiCloudEndEffector";
-
-const modelDecider: ModelDecider = {
-  async decide(prompt) {
-    return { model: await chooseGmiModel(prompt) };
-  },
-};
-
-const session = new ChatSession(context, modelDecider);
-```
-
-Replace the `new ChatSession(context)` call in `src/extension.ts` with the final line above when the decider is available. For GMI Cloud chat, `ChatSession` invokes the decider once per user prompt and passes its result to `GmiCloudEndEffector`; the configured fallback is only used when no decider is injected.
-
-The end effector can also be used independently:
-
-```ts
-const result = await new GmiCloudEndEffector().execute(
-  { decision: { model: "deepseek-ai/DeepSeek-R1" }, prompt: "Explain this diff." },
-  gmiApiKey,
-);
-
-console.log(result.content);
-```
-
-## Develop locally
+## Run locally
 
 ```sh
+cp .env.example .env.local
 npm install
-npm run compile
+npm run dev
 ```
 
-Open this folder in VS Code and press `F5` to launch an Extension Development Host. Run `Hyperion: Open Chat` from the Command Palette.
+Add at least one provider key to `.env.local`, then open http://localhost:3000. Restart the server whenever you change a key. The server starts without keys, but no model is eligible until a provider is configured.
 
-## Model pricing data
+## API
 
-`data/model-pricing.json` contains a source-linked catalog spanning 50 model developers. Major-provider entries use official first-party prices, while the wider catalog uses normalized OpenRouter route prices. Prices are USD per one million tokens; provider-specific long-context and cache charges are represented where applicable.
+```ts
+const response = await fetch("http://localhost:3000/api/v1/generate", {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ prompt: "Implement A* in Python", optimize: "quality" })
+});
+const result = await response.json();
+console.log(result.output, result.model, result.routing.reason);
+```
 
-## Model latency data
+- `POST /api/v1/route` selects a model without executing it.
+- `POST /api/v1/generate` selects and runs it, with provider-failure fallback.
+- `POST /api/v1/compare` runs explicitly requested candidates in parallel.
 
-`data/model-latency.json` contains endpoint-specific latency and generation-throughput snapshots for the exact same provider/model set as `data/model-pricing.json`, spanning 50 model developers. Measurements keep TTFT, post-first-token throughput, end-to-end latency, hosting provider, workload, region, service tier, source, and confidence separate; unavailable metrics are `null`. Most numeric entries are rolling p50 Artificial Analysis measurements, so consumers should treat them as time-sensitive observations rather than fixed properties of a model.
+## Architecture
 
-## Planned, not implemented
+`data/models/catalog.json` is the single editable source for model metadata and pricing; `src/lib/model-registry.ts` loads it. `src/lib/router/` owns analysis, deterministic filters, scoring, confidence, and explanations. `src/lib/providers/` isolates real OpenAI, Anthropic, and Google SDK calls. `src/lib/repository.ts` provides an in-memory store behind a Postgres-ready interface.
 
-- Codebase profiling
-- Model benchmark and capability data
-- Cost and latency scoring
-- Task decomposition and the model-decider implementation
-- Tools, repository mutation, telemetry, and agent execution
+The task analyzer currently uses a validated deterministic fallback so routing works without spending an extra model call. A multi-agent run executes the user-defined team sequentially and carries earlier work into later agents. Output judging, historical priors, semantic retrieval, shadow routing, and Postgres persistence are intentionally isolated extension points and disabled/not implemented rather than simulated.
 
-The current chat does not read workspace files, use tools, select among models, or delegate subtasks.
+## Environment variables
+
+`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, and `GOOGLE_API_KEY` enable their respective providers. The remaining variables in `.env.example` reserve analyzer, judge, shadow-routing, and database configuration.
+
+Run `npm run typecheck`, `npm run build`, and `npm run benchmark` (with a provider key) to verify the application.
+
+## VS Code extension
+
+This repository also ships the existing Hyperion VS Code chat extension. It has its own streaming-chat provider configuration and stores extension API keys with VS Code SecretStorage. Build it with `npm run compile`, then press `F5` in VS Code to launch an Extension Development Host. The web app and extension are separate surfaces; the extension has not yet been wired to the web router or multi-agent API.
