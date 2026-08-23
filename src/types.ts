@@ -1,5 +1,5 @@
 export type ChatRole = "user" | "assistant";
-export type Provider = "openai-compatible" | "anthropic";
+export type Provider = "openai-compatible" | "anthropic" | "gmi-cloud";
 
 export interface ChatMessage {
   id: string;
@@ -20,4 +20,5 @@ export interface ChatConfiguration {
   systemPrompt: string;
   requestTimeoutSeconds: number;
   maxOutputTokens: number;
+  organizationId?: string;
 }

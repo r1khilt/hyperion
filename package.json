@@ -50,14 +50,16 @@
           "type": "string",
           "enum": [
             "openai-compatible",
-            "anthropic"
+            "anthropic",
+            "gmi-cloud"
           ],
           "enumDescriptions": [
             "Use an OpenAI-compatible Chat Completions endpoint.",
-            "Use Anthropic's native Claude Messages API."
+            "Use Anthropic's native Claude Messages API.",
+            "Send the model decider's selected model to GMI Cloud."
           ],
           "default": "openai-compatible",
-          "description": "Provider used for ordinary chat. Selection is manual; Hyperion does not route between providers."
+          "description": "Provider used for chat execution. GMI Cloud accepts a model selected by an injected model decider and otherwise uses the fallback model."
         },
         "hyperion.showStatusBar": {
           "type": "boolean",
@@ -90,6 +92,28 @@
           "minimum": 1,
           "maximum": 128000,
           "description": "Maximum output tokens requested from the Anthropic Messages API."
+        },
+        "hyperion.gmiApiBaseUrl": {
+          "type": "string",
+          "default": "https://api.gmi-serving.com/v1",
+          "description": "GMI Cloud inference base URL. Hyperion appends /chat/completions unless it is already present."
+        },
+        "hyperion.gmiFallbackModel": {
+          "type": "string",
+          "default": "deepseek-ai/DeepSeek-R1",
+          "description": "GMI Cloud model used for direct chat until a model decider is injected. A decider result overrides this value per prompt."
+        },
+        "hyperion.gmiMaxOutputTokens": {
+          "type": "number",
+          "default": 4096,
+          "minimum": 1,
+          "maximum": 128000,
+          "description": "Maximum output tokens requested from GMI Cloud."
+        },
+        "hyperion.gmiOrganizationId": {
+          "type": "string",
+          "default": "",
+          "description": "Optional GMI Cloud organization ID, sent as X-Organization-ID for multi-organization access."
         },
         "hyperion.systemPrompt": {
           "type": "string",

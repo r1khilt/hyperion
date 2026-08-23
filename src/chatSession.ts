@@ -1,12 +1,14 @@
 import * as vscode from "vscode";
 import { AnthropicClient } from "./anthropicClient";
 import { ApiRequestError } from "./apiError";
+import { GmiCloudEndEffector, ModelDecider } from "./gmiCloudEndEffector";
 import { OpenAICompatibleClient } from "./openAICompatibleClient";
 import { ApiChatMessage, ChatConfiguration, ChatMessage, Provider } from "./types";
 
 const API_KEY_SECRETS: Record<Provider, string> = {
   "openai-compatible": "hyperion.openaiCompatibleApiKey",
   anthropic: "hyperion.anthropicApiKey",
+  "gmi-cloud": "hyperion.gmiCloudApiKey",
 };
 const MESSAGE_STORAGE_KEY = "hyperion.chatMessages.v1";
 
@@ -22,12 +24,16 @@ type WebviewRequest =
 export class ChatSession implements vscode.Disposable {
   private readonly openAIClient = new OpenAICompatibleClient();
   private readonly anthropicClient = new AnthropicClient();
+  private readonly gmiCloudEndEffector = new GmiCloudEndEffector();
   private readonly webviews = new Set<vscode.Webview>();
   private messages: ChatMessage[];
   private activeController: AbortController | undefined;
   private errorMessage: string | undefined;
 
-  public constructor(private readonly context: vscode.ExtensionContext) {
+  public constructor(
+    private readonly context: vscode.ExtensionContext,
+    private readonly modelDecider?: ModelDecider,
+  ) {
     this.messages = sanitizeStoredMessages(
       context.workspaceState.get<ChatMessage[]>(MESSAGE_STORAGE_KEY, []),
     );
@@ -49,7 +55,7 @@ export class ChatSession implements vscode.Disposable {
 
   public async setApiKey(): Promise<void> {
     const configuration = getConfiguration();
-    const providerName = configuration.provider === "anthropic" ? "Anthropic" : "OpenAI-compatible";
+    const providerName = providerLabel(configuration.provider);
     const secretKey = API_KEY_SECRETS[configuration.provider];
     const existing = await this.context.secrets.get(secretKey);
     const value = await vscode.window.showInputBox({
@@ -61,7 +67,9 @@ export class ChatSession implements vscode.Disposable {
         ? "A key is currently saved"
         : configuration.provider === "anthropic"
           ? "sk-ant-…"
-          : "sk-…",
+          : configuration.provider === "gmi-cloud"
+            ? "GMI Cloud API key"
+            : "sk-…",
       password: true,
       ignoreFocusOut: true,
     });
@@ -103,6 +111,12 @@ export class ChatSession implements vscode.Disposable {
           description: "Native Claude Messages API",
           provider: "anthropic" as const,
           picked: current === "anthropic",
+        },
+        {
+          label: "GMI Cloud",
+          description: "Routed OpenAI-compatible inference",
+          provider: "gmi-cloud" as const,
+          picked: current === "gmi-cloud",
         },
       ],
       {
@@ -190,7 +204,10 @@ export class ChatSession implements vscode.Disposable {
     }
 
     const configuration = getConfiguration();
-    if (!configuration.model.trim()) {
+    if (
+      !configuration.model.trim() &&
+      !(configuration.provider === "gmi-cloud" && this.modelDecider)
+    ) {
       this.errorMessage = "Set a model identifier in Hyperion settings.";
       await this.broadcastState();
       return;
@@ -214,25 +231,49 @@ export class ChatSession implements vscode.Disposable {
       const apiKey = await this.context.secrets.get(
         API_KEY_SECRETS[configuration.provider],
       );
-      const apiMessages = requestMessages(configuration, this.messages);
-      const client =
-        configuration.provider === "anthropic"
-          ? this.anthropicClient
-          : this.openAIClient;
-      await client.streamChat(
-        configuration,
-        apiKey,
-        apiMessages,
-        (delta) => {
-          assistantMessage.content += delta;
-          this.broadcast({
-            type: "messageDelta",
-            id: assistantMessage.id,
-            delta,
-          });
-        },
-        controller.signal,
-      );
+      const onDelta = (delta: string): void => {
+        assistantMessage.content += delta;
+        this.broadcast({
+          type: "messageDelta",
+          id: assistantMessage.id,
+          delta,
+        });
+      };
+
+      if (configuration.provider === "gmi-cloud") {
+        const decision = this.modelDecider
+          ? await this.modelDecider.decide(content)
+          : { model: configuration.model };
+        await this.gmiCloudEndEffector.execute(
+          {
+            decision,
+            prompt: content,
+            history: conversationHistory(this.messages.slice(0, -2)),
+            systemPrompt: configuration.systemPrompt,
+            maxOutputTokens: configuration.maxOutputTokens,
+          },
+          apiKey,
+          {
+            apiBaseUrl: configuration.apiBaseUrl,
+            organizationId: configuration.organizationId,
+            onDelta,
+            signal: controller.signal,
+          },
+        );
+      } else {
+        const apiMessages = requestMessages(configuration, this.messages);
+        const client =
+          configuration.provider === "anthropic"
+            ? this.anthropicClient
+            : this.openAIClient;
+        await client.streamChat(
+          configuration,
+          apiKey,
+          apiMessages,
+          onDelta,
+          controller.signal,
+        );
+      }
 
       if (!assistantMessage.content) {
         assistantMessage.content = "The model returned no text.";
@@ -271,8 +312,7 @@ export class ChatSession implements vscode.Disposable {
       error: this.errorMessage,
       configuration: {
         ...configuration,
-        providerLabel:
-          configuration.provider === "anthropic" ? "Anthropic" : "OpenAI-compatible",
+        providerLabel: providerLabel(configuration.provider),
         hasApiKey: Boolean(apiKey),
       },
     });
@@ -297,16 +337,23 @@ function getConfiguration(): ChatConfiguration {
   const configuration = vscode.workspace.getConfiguration("hyperion");
   const configuredProvider = configuration.get<string>("provider", "openai-compatible");
   const provider: Provider =
-    configuredProvider === "anthropic" ? "anthropic" : "openai-compatible";
+    configuredProvider === "anthropic" || configuredProvider === "gmi-cloud"
+      ? configuredProvider
+      : "openai-compatible";
   const anthropic = provider === "anthropic";
+  const gmiCloud = provider === "gmi-cloud";
   return {
     provider,
     apiBaseUrl: anthropic
       ? configuration.get<string>("anthropicApiBaseUrl", "https://api.anthropic.com/v1")
-      : configuration.get<string>("apiBaseUrl", "https://api.openai.com/v1"),
+      : gmiCloud
+        ? configuration.get<string>("gmiApiBaseUrl", "https://api.gmi-serving.com/v1")
+        : configuration.get<string>("apiBaseUrl", "https://api.openai.com/v1"),
     model: anthropic
       ? configuration.get<string>("anthropicModel", "claude-sonnet-5")
-      : configuration.get<string>("model", "gpt-4o-mini"),
+      : gmiCloud
+        ? configuration.get<string>("gmiFallbackModel", "deepseek-ai/DeepSeek-R1")
+        : configuration.get<string>("model", "gpt-4o-mini"),
     systemPrompt: configuration.get<string>(
       "systemPrompt",
       "You are a helpful software engineering assistant.",
@@ -314,8 +361,19 @@ function getConfiguration(): ChatConfiguration {
     requestTimeoutSeconds: configuration.get<number>("requestTimeoutSeconds", 120),
     maxOutputTokens: anthropic
       ? configuration.get<number>("anthropicMaxOutputTokens", 4096)
-      : 0,
+      : gmiCloud
+        ? configuration.get<number>("gmiMaxOutputTokens", 4096)
+        : 0,
+    organizationId: gmiCloud
+      ? configuration.get<string>("gmiOrganizationId", "")
+      : undefined,
   };
+}
+
+function conversationHistory(messages: ChatMessage[]): ApiChatMessage[] {
+  return messages
+    .filter((message) => message.content.trim())
+    .map((message) => ({ role: message.role, content: message.content }));
 }
 
 function requestMessages(
@@ -368,4 +426,14 @@ function friendlyError(error: unknown): string {
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
+}
+
+function providerLabel(provider: Provider): string {
+  if (provider === "anthropic") {
+    return "Anthropic";
+  }
+  if (provider === "gmi-cloud") {
+    return "GMI Cloud";
+  }
+  return "OpenAI-compatible";
 }

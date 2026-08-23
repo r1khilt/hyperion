@@ -31,6 +31,9 @@ export class OpenAICompatibleClient {
     if (apiKey?.trim()) {
       headers.Authorization = `Bearer ${apiKey.trim()}`;
     }
+    if (configuration.organizationId?.trim()) {
+      headers["X-Organization-ID"] = configuration.organizationId.trim();
+    }
 
     let response: Response;
     try {
@@ -41,6 +44,9 @@ export class OpenAICompatibleClient {
           model: configuration.model,
           messages,
           stream: true,
+          ...(configuration.maxOutputTokens > 0
+            ? { max_tokens: configuration.maxOutputTokens }
+            : {}),
         }),
         signal,
       });

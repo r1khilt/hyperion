@@ -105,7 +105,7 @@ function chatHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
       <section class="empty-state" id="empty-state">
         <div class="empty-mark" aria-hidden="true">H</div>
         <h1>What can I help with?</h1>
-        <p>A straightforward chat with the model you configure. No routing or agent logic is active.</p>
+        <p>Chat directly with a configured provider, or execute routed model choices through GMI Cloud.</p>
         <div class="suggestion-grid">
           <button class="suggestion" type="button" data-prompt="Explain this code clearly and point out any edge cases.">
             <strong>Explain code</strong><span>Understand behavior and edge cases</span>
