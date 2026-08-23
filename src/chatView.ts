@@ -78,7 +78,7 @@ function chatHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
         <div class="brand-mark" aria-hidden="true">H</div>
         <div class="brand-copy">
           <strong>Hyperion</strong>
-          <span>Standard chat</span>
+          <span id="chat-mode">Standard chat</span>
         </div>
       </div>
       <div class="topbar-actions">
@@ -92,8 +92,9 @@ function chatHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
     </header>
 
     <div class="provider-bar">
-      <button class="provider-button" id="provider-settings" type="button" title="Configure provider">
+      <button class="provider-button" id="provider-settings" type="button" title="Switch provider">
         <span class="status-dot" id="status-dot"></span>
+        <span class="provider-name" id="provider-name">OpenAI-compatible</span>
         <span class="provider-model" id="provider-model">Loading…</span>
         <span class="provider-endpoint" id="provider-endpoint"></span>
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4" /></svg>

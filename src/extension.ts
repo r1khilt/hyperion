@@ -13,6 +13,9 @@ export function activate(context: vscode.ExtensionContext): void {
     chatView,
     vscode.commands.registerCommand(DASHBOARD_COMMAND, () => chatView.show()),
     vscode.commands.registerCommand("hyperion.setApiKey", () => session.setApiKey()),
+    vscode.commands.registerCommand("hyperion.selectProvider", () =>
+      session.selectProvider(),
+    ),
     vscode.commands.registerCommand("hyperion.clearChat", () => session.requestNewChat()),
     vscode.commands.registerCommand("hyperion.openSettings", () =>
       vscode.commands.executeCommand(

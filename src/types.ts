@@ -1,4 +1,5 @@
 export type ChatRole = "user" | "assistant";
+export type Provider = "openai-compatible" | "anthropic";
 
 export interface ChatMessage {
   id: string;
@@ -13,8 +14,10 @@ export interface ApiChatMessage {
 }
 
 export interface ChatConfiguration {
+  provider: Provider;
   apiBaseUrl: string;
   model: string;
   systemPrompt: string;
   requestTimeoutSeconds: number;
+  maxOutputTokens: number;
 }

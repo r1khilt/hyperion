@@ -9,7 +9,9 @@ const elements = {
   stop: document.getElementById("stop"),
   newChat: document.getElementById("new-chat"),
   settings: document.getElementById("settings"),
+  chatMode: document.getElementById("chat-mode"),
   providerSettings: document.getElementById("provider-settings"),
+  providerName: document.getElementById("provider-name"),
   providerModel: document.getElementById("provider-model"),
   providerEndpoint: document.getElementById("provider-endpoint"),
   statusDot: document.getElementById("status-dot"),
@@ -55,7 +57,9 @@ elements.send.addEventListener("click", sendPrompt);
 elements.stop.addEventListener("click", () => vscode.postMessage({ type: "stop" }));
 elements.newChat.addEventListener("click", () => vscode.postMessage({ type: "newChat" }));
 elements.settings.addEventListener("click", openSettings);
-elements.providerSettings.addEventListener("click", openSettings);
+elements.providerSettings.addEventListener("click", () =>
+  vscode.postMessage({ type: "selectProvider" }),
+);
 elements.errorSettings.addEventListener("click", openSettings);
 elements.apiKey.addEventListener("click", () => vscode.postMessage({ type: "setApiKey" }));
 
@@ -236,10 +240,14 @@ function renderConfiguration() {
   }
 
   elements.providerModel.textContent = configuration.model || "No model selected";
+  elements.providerName.textContent = configuration.providerLabel;
   elements.providerEndpoint.textContent = endpointLabel(configuration.apiBaseUrl);
+  elements.chatMode.textContent = `${configuration.providerLabel} chat`;
   elements.statusDot.classList.toggle("configured", Boolean(configuration.hasApiKey));
   elements.keyDot.classList.toggle("configured", Boolean(configuration.hasApiKey));
-  elements.keyLabel.textContent = configuration.hasApiKey ? "Key saved" : "Set API key";
+  elements.keyLabel.textContent = configuration.hasApiKey
+    ? `${configuration.providerLabel} key saved`
+    : `Set ${configuration.providerLabel} key`;
   elements.apiKey.title = configuration.hasApiKey
     ? "Replace or remove the saved API key"
     : "Set API key";

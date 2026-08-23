@@ -1,20 +1,32 @@
 import { ApiRequestError } from "./apiError";
 import { ApiChatMessage, ChatConfiguration } from "./types";
 
-interface ChatCompletionChunk {
-  choices?: Array<{
-    delta?: { content?: string | Array<{ text?: string }> };
-  }>;
+interface AnthropicStreamEvent {
+  type?: string;
+  delta?: {
+    type?: string;
+    text?: string;
+  };
+  content_block?: {
+    type?: string;
+    text?: string;
+  };
+  error?: {
+    message?: string;
+  };
 }
 
-interface ChatCompletionResponse {
-  choices?: Array<{
-    message?: { content?: string | Array<{ text?: string }> | null };
+interface AnthropicResponse {
+  content?: Array<{
+    type?: string;
+    text?: string;
   }>;
-  error?: { message?: string };
+  error?: {
+    message?: string;
+  };
 }
 
-export class OpenAICompatibleClient {
+export class AnthropicClient {
   public async streamChat(
     configuration: ChatConfiguration,
     apiKey: string | undefined,
@@ -22,15 +34,21 @@ export class OpenAICompatibleClient {
     onDelta: (content: string) => void,
     signal: AbortSignal,
   ): Promise<void> {
-    const endpoint = chatCompletionsEndpoint(configuration.apiBaseUrl);
+    const endpoint = messagesEndpoint(configuration.apiBaseUrl);
     const headers: Record<string, string> = {
       Accept: "text/event-stream, application/json",
       "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01",
     };
 
     if (apiKey?.trim()) {
-      headers.Authorization = `Bearer ${apiKey.trim()}`;
+      headers["x-api-key"] = apiKey.trim();
     }
+
+    const system = messages.find((message) => message.role === "system")?.content.trim();
+    const conversation = messages
+      .filter((message) => message.role === "user" || message.role === "assistant")
+      .map((message) => ({ role: message.role, content: message.content }));
 
     let response: Response;
     try {
@@ -39,8 +57,10 @@ export class OpenAICompatibleClient {
         headers,
         body: JSON.stringify({
           model: configuration.model,
-          messages,
+          max_tokens: configuration.maxOutputTokens,
+          messages: conversation,
           stream: true,
+          ...(system ? { system } : {}),
         }),
         signal,
       });
@@ -62,27 +82,27 @@ export class OpenAICompatibleClient {
       return;
     }
 
-    const payload = (await response.json()) as ChatCompletionResponse;
-    const content = textContent(payload.choices?.[0]?.message?.content);
+    const payload = (await response.json()) as AnthropicResponse;
+    const content = (payload.content ?? [])
+      .filter((block) => block.type === "text")
+      .map((block) => block.text ?? "")
+      .join("");
     if (!content) {
-      throw new ApiRequestError("The API returned a response without assistant text.");
+      throw new ApiRequestError("The Anthropic API returned a response without assistant text.");
     }
     onDelta(content);
   }
 }
 
-function chatCompletionsEndpoint(baseUrl: string): string {
+function messagesEndpoint(baseUrl: string): string {
   const normalized = baseUrl.trim().replace(/\/+$/, "");
   if (!normalized) {
-    throw new ApiRequestError("Set an API base URL in Hyperion settings.");
+    throw new ApiRequestError("Set an Anthropic API base URL in Hyperion settings.");
   }
-  if (
-    normalized.endsWith("/chat/completions") ||
-    normalized.includes("/chat/completions?")
-  ) {
+  if (normalized.endsWith("/messages") || normalized.includes("/messages?")) {
     return normalized;
   }
-  return `${normalized}/chat/completions`;
+  return `${normalized}/messages`;
 }
 
 async function readEventStream(
@@ -108,7 +128,6 @@ async function readEventStream(
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split(/\r?\n/);
       buffer = lines.pop() ?? "";
-
       for (const line of lines) {
         parseEventLine(line, onDelta);
       }
@@ -128,31 +147,33 @@ function parseEventLine(line: string, onDelta: (content: string) => void): void 
   }
 
   const data = line.slice(5).trim();
-  if (!data || data === "[DONE]") {
+  if (!data) {
     return;
   }
 
-  let payload: ChatCompletionChunk;
+  let event: AnthropicStreamEvent;
   try {
-    payload = JSON.parse(data) as ChatCompletionChunk;
+    event = JSON.parse(data) as AnthropicStreamEvent;
   } catch {
     return;
   }
 
-  const content = textContent(payload.choices?.[0]?.delta?.content);
-  if (content) {
-    onDelta(content);
+  if (event.type === "error") {
+    throw new ApiRequestError(event.error?.message || "The Anthropic stream returned an error.");
   }
-}
 
-function textContent(content: string | Array<{ text?: string }> | null | undefined): string {
-  if (typeof content === "string") {
-    return content;
+  if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+    if (event.delta.text) {
+      onDelta(event.delta.text);
+    }
+    return;
   }
-  if (Array.isArray(content)) {
-    return content.map((part) => part.text ?? "").join("");
+
+  if (event.type === "content_block_start" && event.content_block?.type === "text") {
+    if (event.content_block.text) {
+      onDelta(event.content_block.text);
+    }
   }
-  return "";
 }
 
 async function responseError(response: Response): Promise<ApiRequestError> {
@@ -160,7 +181,7 @@ async function responseError(response: Response): Promise<ApiRequestError> {
   let message = raw.trim();
 
   try {
-    const payload = JSON.parse(raw) as ChatCompletionResponse;
+    const payload = JSON.parse(raw) as AnthropicResponse;
     message = payload.error?.message?.trim() || message;
   } catch {
     // Non-JSON errors are returned as a concise text excerpt below.
@@ -171,7 +192,7 @@ async function responseError(response: Response): Promise<ApiRequestError> {
   }
 
   return new ApiRequestError(
-    message || `The API returned HTTP ${response.status}.`,
+    message || `The Anthropic API returned HTTP ${response.status}.`,
     response.status,
   );
 }

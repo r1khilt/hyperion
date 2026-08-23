@@ -187,11 +187,24 @@ textarea:focus-visible {
 
 .provider-model {
   overflow: hidden;
-  margin-left: 7px;
+  margin-left: 5px;
   font-size: 12px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.provider-name {
+  flex: 0 0 auto;
+  margin-left: 7px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.provider-name::after {
+  margin-left: 5px;
+  content: "·";
 }
 
 .provider-endpoint {
@@ -627,6 +640,7 @@ textarea:focus-visible {
   }
 
   .brand-copy span,
+  .provider-name,
   .provider-endpoint,
   .input-hint {
     display: none;

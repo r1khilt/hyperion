@@ -14,6 +14,7 @@
   "activationEvents": [
     "onCommand:hyperion.openDashboard",
     "onCommand:hyperion.setApiKey",
+    "onCommand:hyperion.selectProvider",
     "onCommand:hyperion.clearChat",
     "onCommand:hyperion.openSettings",
     "onView:hyperion.chat"
@@ -30,6 +31,10 @@
         "title": "Hyperion: Set API Key"
       },
       {
+        "command": "hyperion.selectProvider",
+        "title": "Hyperion: Select Chat Provider"
+      },
+      {
         "command": "hyperion.clearChat",
         "title": "Hyperion: New Chat"
       },
@@ -41,6 +46,19 @@
     "configuration": {
       "title": "Hyperion",
       "properties": {
+        "hyperion.provider": {
+          "type": "string",
+          "enum": [
+            "openai-compatible",
+            "anthropic"
+          ],
+          "enumDescriptions": [
+            "Use an OpenAI-compatible Chat Completions endpoint.",
+            "Use Anthropic's native Claude Messages API."
+          ],
+          "default": "openai-compatible",
+          "description": "Provider used for ordinary chat. Selection is manual; Hyperion does not route between providers."
+        },
         "hyperion.showStatusBar": {
           "type": "boolean",
           "default": true,
@@ -49,12 +67,29 @@
         "hyperion.apiBaseUrl": {
           "type": "string",
           "default": "https://api.openai.com/v1",
-          "description": "Base URL for an OpenAI-compatible API. Hyperion appends /chat/completions unless it is already present."
+          "description": "Base URL for the OpenAI-compatible provider. Hyperion appends /chat/completions unless it is already present."
         },
         "hyperion.model": {
           "type": "string",
           "default": "gpt-4o-mini",
-          "description": "Model identifier sent to the configured API."
+          "description": "Model identifier sent to the OpenAI-compatible provider."
+        },
+        "hyperion.anthropicApiBaseUrl": {
+          "type": "string",
+          "default": "https://api.anthropic.com/v1",
+          "description": "Base URL for the Anthropic Messages API. Hyperion appends /messages unless it is already present."
+        },
+        "hyperion.anthropicModel": {
+          "type": "string",
+          "default": "claude-sonnet-5",
+          "description": "Claude model identifier sent to Anthropic."
+        },
+        "hyperion.anthropicMaxOutputTokens": {
+          "type": "number",
+          "default": 4096,
+          "minimum": 1,
+          "maximum": 128000,
+          "description": "Maximum output tokens requested from the Anthropic Messages API."
         },
         "hyperion.systemPrompt": {
           "type": "string",

@@ -1,22 +1,23 @@
 # Hyperion
 
-Hyperion currently provides a polished single-model chat foundation for a future dynamic multi-model software-engineering agent. It talks to a configurable OpenAI-compatible Chat Completions endpoint and deliberately contains no model routing or project-agent behavior yet.
+Hyperion currently provides a polished single-model chat foundation for a future dynamic multi-model software-engineering agent. It talks to either a configurable OpenAI-compatible Chat Completions endpoint or Anthropic's native Messages API and deliberately contains no model routing or project-agent behavior yet.
 
 ## Current surfaces
 
 - A streaming chat in the Hyperion activity-bar view and an optional editor panel.
 - Conversation history stored locally in VS Code workspace state.
 - Stop generation, new chat, message/code copying, and provider error handling.
-- A configurable OpenAI-compatible base URL, model, system prompt, and timeout.
-- API keys stored through VS Code SecretStorage rather than settings or source files.
+- Manually selected OpenAI-compatible or Anthropic provider settings, models, system prompt, and timeout.
+- Separate provider API keys stored through VS Code SecretStorage rather than settings or source files.
 
 ## Configure a provider
 
-1. Run **Hyperion: Set API Key** and enter the provider key. Anonymous local endpoints can skip this step.
-2. Open VS Code settings and search for **Hyperion** to set the API base URL and model identifier.
-3. Run **Hyperion: Open Chat** or select the Hyperion activity-bar icon.
+1. Run **Hyperion: Select Chat Provider** and choose OpenAI-compatible or Anthropic.
+2. Run **Hyperion: Set API Key** and enter the key for the selected provider. Anonymous OpenAI-compatible local endpoints can skip this step.
+3. Open VS Code settings and search for **Hyperion** to set provider-specific API base URLs and model identifiers.
+4. Run **Hyperion: Open Chat** or select the Hyperion activity-bar icon.
 
-The default API base URL is `https://api.openai.com/v1`. For another compatible provider, set the base URL to its versioned API root; Hyperion appends `/chat/completions` automatically.
+The OpenAI-compatible default base URL is `https://api.openai.com/v1`; Hyperion appends `/chat/completions` automatically. The Anthropic default is `https://api.anthropic.com/v1`; Hyperion appends `/messages` automatically.
 
 ## Develop locally
 

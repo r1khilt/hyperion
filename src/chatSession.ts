@@ -1,8 +1,13 @@
 import * as vscode from "vscode";
-import { ApiRequestError, OpenAICompatibleClient } from "./openAICompatibleClient";
-import { ApiChatMessage, ChatConfiguration, ChatMessage } from "./types";
+import { AnthropicClient } from "./anthropicClient";
+import { ApiRequestError } from "./apiError";
+import { OpenAICompatibleClient } from "./openAICompatibleClient";
+import { ApiChatMessage, ChatConfiguration, ChatMessage, Provider } from "./types";
 
-const API_KEY_SECRET = "hyperion.openaiCompatibleApiKey";
+const API_KEY_SECRETS: Record<Provider, string> = {
+  "openai-compatible": "hyperion.openaiCompatibleApiKey",
+  anthropic: "hyperion.anthropicApiKey",
+};
 const MESSAGE_STORAGE_KEY = "hyperion.chatMessages.v1";
 
 type WebviewRequest =
@@ -10,11 +15,13 @@ type WebviewRequest =
   | { type: "stop" }
   | { type: "newChat" }
   | { type: "setApiKey" }
+  | { type: "selectProvider" }
   | { type: "openSettings" }
   | { type: "copy"; content?: unknown };
 
 export class ChatSession implements vscode.Disposable {
-  private readonly client = new OpenAICompatibleClient();
+  private readonly openAIClient = new OpenAICompatibleClient();
+  private readonly anthropicClient = new AnthropicClient();
   private readonly webviews = new Set<vscode.Webview>();
   private messages: ChatMessage[];
   private activeController: AbortController | undefined;
@@ -41,13 +48,20 @@ export class ChatSession implements vscode.Disposable {
   }
 
   public async setApiKey(): Promise<void> {
-    const existing = await this.context.secrets.get(API_KEY_SECRET);
+    const configuration = getConfiguration();
+    const providerName = configuration.provider === "anthropic" ? "Anthropic" : "OpenAI-compatible";
+    const secretKey = API_KEY_SECRETS[configuration.provider];
+    const existing = await this.context.secrets.get(secretKey);
     const value = await vscode.window.showInputBox({
-      title: "Hyperion API key",
+      title: `Hyperion ${providerName} API key`,
       prompt: existing
         ? "Enter a replacement key, or leave this blank to remove the saved key."
-        : "Enter the API key for your OpenAI-compatible provider.",
-      placeHolder: existing ? "A key is currently saved" : "sk-…",
+        : `Enter the API key for ${providerName}.`,
+      placeHolder: existing
+        ? "A key is currently saved"
+        : configuration.provider === "anthropic"
+          ? "sk-ant-…"
+          : "sk-…",
       password: true,
       ignoreFocusOut: true,
     });
@@ -57,13 +71,54 @@ export class ChatSession implements vscode.Disposable {
     }
 
     if (value.trim()) {
-      await this.context.secrets.store(API_KEY_SECRET, value.trim());
-      void vscode.window.showInformationMessage("Hyperion API key saved securely.");
+      await this.context.secrets.store(secretKey, value.trim());
+      void vscode.window.showInformationMessage(`${providerName} API key saved securely.`);
     } else {
-      await this.context.secrets.delete(API_KEY_SECRET);
-      void vscode.window.showInformationMessage("Hyperion API key removed.");
+      await this.context.secrets.delete(secretKey);
+      void vscode.window.showInformationMessage(`${providerName} API key removed.`);
     }
 
+    await this.broadcastState();
+  }
+
+  public async selectProvider(): Promise<void> {
+    if (this.activeController) {
+      void vscode.window.showInformationMessage(
+        "Stop the current response before switching providers.",
+      );
+      return;
+    }
+
+    const current = getConfiguration().provider;
+    const selected = await vscode.window.showQuickPick(
+      [
+        {
+          label: "OpenAI-compatible",
+          description: "Chat Completions API",
+          provider: "openai-compatible" as const,
+          picked: current === "openai-compatible",
+        },
+        {
+          label: "Anthropic",
+          description: "Native Claude Messages API",
+          provider: "anthropic" as const,
+          picked: current === "anthropic",
+        },
+      ],
+      {
+        title: "Select Hyperion chat provider",
+        placeHolder: "Choose one provider for this chat",
+      },
+    );
+
+    if (!selected || selected.provider === current) {
+      return;
+    }
+
+    await vscode.workspace
+      .getConfiguration("hyperion")
+      .update("provider", selected.provider, vscode.ConfigurationTarget.Global);
+    this.errorMessage = undefined;
     await this.broadcastState();
   }
 
@@ -111,6 +166,9 @@ export class ChatSession implements vscode.Disposable {
       case "setApiKey":
         await this.setApiKey();
         break;
+      case "selectProvider":
+        await this.selectProvider();
+        break;
       case "openSettings":
         await vscode.commands.executeCommand(
           "workbench.action.openSettings",
@@ -153,9 +211,15 @@ export class ChatSession implements vscode.Disposable {
     }, configuration.requestTimeoutSeconds * 1000);
 
     try {
-      const apiKey = await this.context.secrets.get(API_KEY_SECRET);
+      const apiKey = await this.context.secrets.get(
+        API_KEY_SECRETS[configuration.provider],
+      );
       const apiMessages = requestMessages(configuration, this.messages);
-      await this.client.streamChat(
+      const client =
+        configuration.provider === "anthropic"
+          ? this.anthropicClient
+          : this.openAIClient;
+      await client.streamChat(
         configuration,
         apiKey,
         apiMessages,
@@ -196,14 +260,19 @@ export class ChatSession implements vscode.Disposable {
   }
 
   private async postState(webview: vscode.Webview): Promise<void> {
-    const apiKey = await this.context.secrets.get(API_KEY_SECRET);
+    const configuration = getConfiguration();
+    const apiKey = await this.context.secrets.get(
+      API_KEY_SECRETS[configuration.provider],
+    );
     await webview.postMessage({
       type: "state",
       messages: this.messages,
       isGenerating: Boolean(this.activeController),
       error: this.errorMessage,
       configuration: {
-        ...getConfiguration(),
+        ...configuration,
+        providerLabel:
+          configuration.provider === "anthropic" ? "Anthropic" : "OpenAI-compatible",
         hasApiKey: Boolean(apiKey),
       },
     });
@@ -226,14 +295,26 @@ export class ChatSession implements vscode.Disposable {
 
 function getConfiguration(): ChatConfiguration {
   const configuration = vscode.workspace.getConfiguration("hyperion");
+  const configuredProvider = configuration.get<string>("provider", "openai-compatible");
+  const provider: Provider =
+    configuredProvider === "anthropic" ? "anthropic" : "openai-compatible";
+  const anthropic = provider === "anthropic";
   return {
-    apiBaseUrl: configuration.get<string>("apiBaseUrl", "https://api.openai.com/v1"),
-    model: configuration.get<string>("model", "gpt-4o-mini"),
+    provider,
+    apiBaseUrl: anthropic
+      ? configuration.get<string>("anthropicApiBaseUrl", "https://api.anthropic.com/v1")
+      : configuration.get<string>("apiBaseUrl", "https://api.openai.com/v1"),
+    model: anthropic
+      ? configuration.get<string>("anthropicModel", "claude-sonnet-5")
+      : configuration.get<string>("model", "gpt-4o-mini"),
     systemPrompt: configuration.get<string>(
       "systemPrompt",
       "You are a helpful software engineering assistant.",
     ),
     requestTimeoutSeconds: configuration.get<number>("requestTimeoutSeconds", 120),
+    maxOutputTokens: anthropic
+      ? configuration.get<number>("anthropicMaxOutputTokens", 4096)
+      : 0,
   };
 }
 
