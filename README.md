@@ -1,8 +1,8 @@
 # Hyperion
 
-Hyperion is a Next.js model-routing API and polished developer demo. It classifies a request, deterministically filters provider/model configurations, scores eligible candidates across quality, reliability, cost, and latency, then executes the best available provider.
+Hyperion combines a Next.js model-routing API with an approval-gated VS Code coding agent. The web API classifies requests, filters and scores eligible models, and executes the best provider. The extension can inspect, edit, and verify the open workspace through native tool calls using OpenAI-compatible, Anthropic, GMI Cloud, or OpenRouter models.
 
-## Run locally
+## Run the web app locally
 
 ```sh
 cp .env.example .env.local
@@ -39,6 +39,26 @@ The task analyzer currently uses a validated deterministic fallback so routing w
 
 Run `npm run typecheck`, `npm run build`, and `npm run benchmark` (with a provider key) to verify the application.
 
-## VS Code extension
+## VS Code coding agent
 
-This repository also ships the existing Hyperion VS Code chat extension. It has its own streaming-chat provider configuration and stores extension API keys with VS Code SecretStorage. Build it with `npm run compile`, then press `F5` in VS Code to launch an Extension Development Host. The web app and extension are separate surfaces; the extension has not yet been wired to the web router or multi-agent API.
+The extension provides streaming chat, local conversation history, image and text attachments, provider reasoning traces, and settings for the active model and workspace context. It stores provider keys in VS Code SecretStorage.
+
+Run **Hyperion: Select Chat Provider**, choose OpenAI-compatible, Anthropic, GMI Cloud, or OpenRouter, then run **Hyperion: Set API Key**. GMI Cloud can use an injected model-decider result and otherwise falls back to its configured model. OpenRouter requests tool-capable routes.
+
+Build the extension with `npm run compile`, then press `F5`. The development host opens the current checkout through a relative workspace file, keeping workspace tools scoped to that repository.
+
+## Agent safety
+
+Hyperion asks for approval before every workspace read, search, edit, or command. It never follows a path outside the first open workspace folder, including through existing symlinks. It always excludes `.git`, `node_modules`, and `.hyperionignore`; add a root `.hyperionignore` file for additional files or directories. The matcher supports common `*`, `**`, `?`, directory, and `!` patterns.
+
+Commands run from the workspace root and return capped output to the model. Treat command approval as equivalent to allowing a local shell command under your VS Code user account.
+
+## Planned, not implemented
+
+- Codebase profiling
+- Model benchmark and capability data
+- Cost and latency scoring
+- Task decomposition and live routing
+- Semantic/vector codebase indexing
+- Automated approval policies
+- Wiring the extension directly to the web router and multi-agent API

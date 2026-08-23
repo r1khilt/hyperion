@@ -3,6 +3,15 @@
 .gitignore
 src/**
 data/**
-tsconfig.json
+app/**
+scripts/**
+public/**
+node_modules/**
+.next/**
+.env*
+next-env.d.ts
+next.config.*
+tsconfig*.json
+tsconfig*.tsbuildinfo
 **/*.map
 **/*.ts

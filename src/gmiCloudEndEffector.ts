@@ -69,19 +69,24 @@ export class GmiCloudEndEffector {
       requestTimeoutSeconds: 0,
       maxOutputTokens: request.maxOutputTokens ?? 4096,
       organizationId: options.organizationId?.trim() || undefined,
+      showThinking: false,
+      includeWorkspaceContext: false,
+      optimizationMode: "balanced",
     };
     const messages = executionMessages(request, prompt);
     const signal = options.signal ?? new AbortController().signal;
     let content = "";
 
-    await this.client.streamChat(
+    await this.client.streamTurn(
       configuration,
       apiKey,
       messages,
+      [],
       (delta) => {
         content += delta;
         options.onDelta?.(delta);
       },
+      () => undefined,
       signal,
     );
 
@@ -99,8 +104,17 @@ function executionMessages(
     messages.push({ role: "system", content: systemPrompt });
   }
   for (const message of request.history ?? []) {
-    if (message.content.trim() && message.role !== "system") {
-      messages.push({ role: message.role, content: message.content });
+    if (message.role === "system" || message.role === "tool") {
+      continue;
+    }
+    const content = typeof message.content === "string"
+      ? message.content
+      : message.content
+          .filter((part): part is { type: "text"; text: string } => part.type === "text")
+          .map((part) => part.text)
+          .join("\n");
+    if (content.trim()) {
+      messages.push({ role: message.role, content });
     }
   }
   messages.push({ role: "user", content: prompt });

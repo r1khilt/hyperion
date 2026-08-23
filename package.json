@@ -51,15 +51,17 @@
           "enum": [
             "openai-compatible",
             "anthropic",
-            "gmi-cloud"
+            "gmi-cloud",
+            "openrouter"
           ],
           "enumDescriptions": [
             "Use an OpenAI-compatible Chat Completions endpoint.",
             "Use Anthropic's native Claude Messages API.",
-            "Send the model decider's selected model to GMI Cloud."
+            "Use GMI Cloud directly or with a model-decider selection.",
+            "Use OpenRouter's OpenAI-compatible Chat Completions API with tool-capable routes only."
           ],
           "default": "openai-compatible",
-          "description": "Provider used for chat execution. GMI Cloud accepts a model selected by an injected model decider and otherwise uses the fallback model."
+          "description": "Provider used for chat execution. GMI Cloud accepts an injected model-decider result and otherwise uses its configured fallback model."
         },
         "hyperion.showStatusBar": {
           "type": "boolean",
@@ -115,10 +117,30 @@
           "default": "",
           "description": "Optional GMI Cloud organization ID, sent as X-Organization-ID for multi-organization access."
         },
+        "hyperion.openRouterApiBaseUrl": {
+          "type": "string",
+          "default": "https://openrouter.ai/api/v1",
+          "description": "Base URL for OpenRouter. Hyperion appends /chat/completions unless it is already present."
+        },
+        "hyperion.openRouterModel": {
+          "type": "string",
+          "default": "anthropic/claude-sonnet-4.6",
+          "description": "OpenRouter model slug. Hyperion requires a route that supports its tool-calling request parameters."
+        },
         "hyperion.systemPrompt": {
           "type": "string",
           "default": "You are a helpful software engineering assistant.",
           "description": "System prompt included at the beginning of each chat request."
+        },
+        "hyperion.showThinking": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show any reasoning summaries or thinking traces returned by the provider."
+        },
+        "hyperion.includeWorkspaceContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include the active workspace and editor file name as lightweight context for requests."
         },
         "hyperion.requestTimeoutSeconds": {
           "type": "number",

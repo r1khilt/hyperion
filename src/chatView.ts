@@ -60,6 +60,12 @@ function chatHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
   const scriptUri = webview.asWebviewUri(
     vscode.Uri.joinPath(extensionUri, "media", "chat.js"),
   );
+  const markUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(extensionUri, "media", "hyperion.svg"),
+  );
+  const brandUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(extensionUri, "media", "hyperion-brand.png"),
+  );
   const nonce = randomNonce();
 
   return `<!DOCTYPE html>
@@ -75,13 +81,16 @@ function chatHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
   <div class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">H</div>
+        <img class="brand-mark" src="${markUri}" alt="" />
         <div class="brand-copy">
           <strong>Hyperion</strong>
-          <span id="chat-mode">Standard chat</span>
+          <span id="chat-mode">Coding agent</span>
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="icon-button" id="context-toggle" type="button" title="View context" aria-label="View context">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="M10 7v3.5l2 1.2"/></svg>
+        </button>
         <button class="icon-button" id="new-chat" type="button" title="New chat" aria-label="New chat">
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>
         </button>
@@ -101,28 +110,40 @@ function chatHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
       </button>
     </div>
 
+    <section class="history-dock" id="history-dock">
+      <div class="history-heading"><span>Conversations</span><button id="toggle-history" type="button">Show history</button></div>
+      <div class="history-list" id="history-list" hidden></div>
+    </section>
+
     <main class="conversation" id="conversation" aria-live="polite">
       <section class="empty-state" id="empty-state">
-        <div class="empty-mark" aria-hidden="true">H</div>
-        <h1>What can I help with?</h1>
-        <p>Chat directly with a configured provider, or execute routed model choices through GMI Cloud.</p>
+        <div class="empty-mark brand-art" aria-hidden="true"><img src="${brandUri}" alt="" /></div>
+        <p class="eyebrow">HYPERION / WORKSPACE ASSISTANT</p>
+        <h1>Build with more context.</h1>
+        <p>Bring a file, image, or problem. Hyperion keeps your conversations and asks before every workspace action.</p>
         <div class="suggestion-grid">
-          <button class="suggestion" type="button" data-prompt="Explain this code clearly and point out any edge cases.">
+          <button class="suggestion" type="button" data-prompt="Inspect this codebase and explain its architecture and main entry points.">
             <strong>Explain code</strong><span>Understand behavior and edge cases</span>
           </button>
-          <button class="suggestion" type="button" data-prompt="Help me debug this problem step by step.">
+          <button class="suggestion" type="button" data-prompt="Investigate the current test or build failure, fix it if appropriate, and run focused verification.">
             <strong>Debug a problem</strong><span>Work through an issue together</span>
           </button>
-          <button class="suggestion" type="button" data-prompt="Draft an implementation plan for this feature.">
+          <button class="suggestion" type="button" data-prompt="Implement a small, well-scoped improvement in this repository and verify it.">
             <strong>Plan a feature</strong><span>Turn an idea into clear steps</span>
           </button>
-          <button class="suggestion" type="button" data-prompt="Review this approach and identify the main tradeoffs.">
+          <button class="suggestion" type="button" data-prompt="Review the current workspace for a concrete bug or maintainability issue and propose a focused fix.">
             <strong>Review an approach</strong><span>Surface risks and tradeoffs</span>
           </button>
         </div>
       </section>
       <div class="message-list" id="message-list"></div>
+      <section class="settings-page" id="settings-page" hidden>
+        <p class="eyebrow">PREFERENCES</p><h1>Configure Hyperion</h1><p>Credentials stay in VS Code's secure storage.</p>
+        <div class="settings-card"><label>Model<input id="setting-model" type="text" /></label><label>System instructions<textarea id="setting-system-prompt" rows="4"></textarea></label><label>Request timeout (seconds)<input id="setting-timeout" type="number" min="10" max="600" /></label><label class="switch-row"><input id="setting-thinking" type="checkbox" /> Show provider thinking traces when available</label><label class="switch-row"><input id="setting-workspace-context" type="checkbox" /> Include workspace and active-file context</label><div class="settings-actions"><button class="key-button" id="settings-key" type="button">Manage API key</button><button class="send-button" id="save-settings" type="button">Save changes</button></div></div>
+      </section>
     </main>
+
+    <aside class="context-pane" id="context-pane" hidden><div class="pane-header"><div><p class="eyebrow">CONTEXT INSPECTOR</p><strong>What Hyperion can see</strong></div><button class="icon-button" id="close-context" type="button" aria-label="Close context">×</button></div><div class="context-section"><span class="context-label">SYSTEM INSTRUCTIONS</span><pre id="context-system-prompt"></pre></div><div class="context-section"><span class="context-label">SESSION</span><div class="context-row"><span>Messages</span><strong id="context-message-count">0</strong></div><div class="context-row"><span>Provider</span><strong id="context-provider-name">—</strong></div></div><div class="context-section"><span class="context-label">TRANSPARENCY</span><p id="thinking-note">Thinking traces appear on supported models.</p></div></aside>
 
     <section class="error-banner" id="error-banner" role="alert" hidden>
       <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6.5v4M10 13.5h.01" /></svg>
@@ -130,10 +151,22 @@ function chatHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
       <button id="error-settings" type="button">Configure</button>
     </section>
 
-    <footer class="composer-wrap">
+    <footer class="composer-wrap" id="composer-wrap">
+      <div class="attachment-tray" id="attachment-tray" hidden></div>
       <div class="composer" id="composer">
         <textarea id="prompt" rows="1" placeholder="Message Hyperion" aria-label="Chat message"></textarea>
         <div class="composer-footer">
+          <input id="file-input" type="file" multiple accept="image/*,.txt,.md,.json,.ts,.tsx,.js,.jsx,.py,.go,.rs,.java,.css,.html,.yml,.yaml" hidden />
+          <button class="attach-button" id="attach" type="button" title="Attach images or text files"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 10.5 4.8-4.8a2.5 2.5 0 1 1 3.5 3.5l-6.6 6.6a4 4 0 0 1-5.7-5.6l6.1-6.1" /></svg><span>Add context</span></button>
+          <div class="optimization-switch" role="group" aria-label="Response focus">
+            <span class="optimization-label">Optimize</span>
+            <div class="optimization-options" role="radiogroup" aria-label="Optimize for">
+              <button class="optimization-option" type="button" data-optimization-mode="balanced" role="radio" aria-checked="true" title="Balance cost, speed, and quality">Balanced</button>
+              <button class="optimization-option" type="button" data-optimization-mode="cost" role="radio" aria-checked="false" title="Use fewer tokens and tool calls">Cost</button>
+              <button class="optimization-option" type="button" data-optimization-mode="latency" role="radio" aria-checked="false" title="Favor a quicker response">Speed</button>
+              <button class="optimization-option" type="button" data-optimization-mode="intelligence" role="radio" aria-checked="false" title="Favor deeper investigation and validation">Intelligence</button>
+            </div>
+          </div>
           <button class="key-button" id="api-key" type="button">
             <span class="key-dot" id="key-dot"></span>
             <span id="key-label">API key</span>

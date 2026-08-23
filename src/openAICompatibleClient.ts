@@ -1,33 +1,60 @@
 import { ApiRequestError } from "./apiError";
-import { ApiChatMessage, ChatConfiguration } from "./types";
+import {
+  AgentToolCall,
+  AgentToolDefinition,
+  AgentTurn,
+  ApiChatMessage,
+  ChatConfiguration,
+} from "./types";
+
+interface OpenAIToolCallDelta {
+  index?: number;
+  id?: string;
+  function?: { name?: string; arguments?: string };
+}
 
 interface ChatCompletionChunk {
   choices?: Array<{
-    delta?: { content?: string | Array<{ text?: string }> };
+    delta?: {
+      content?: string | Array<{ text?: string }>;
+      tool_calls?: OpenAIToolCallDelta[];
+      reasoning?: string;
+      reasoning_content?: string;
+    };
   }>;
 }
 
 interface ChatCompletionResponse {
   choices?: Array<{
-    message?: { content?: string | Array<{ text?: string }> | null };
+    message?: {
+      content?: string | Array<{ text?: string }> | null;
+      tool_calls?: Array<{ id?: string; function?: { name?: string; arguments?: string } }>;
+    };
   }>;
   error?: { message?: string };
 }
 
+interface AccumulatedToolCall {
+  id: string;
+  name: string;
+  arguments: string;
+}
+
 export class OpenAICompatibleClient {
-  public async streamChat(
+  public async streamTurn(
     configuration: ChatConfiguration,
     apiKey: string | undefined,
     messages: ApiChatMessage[],
+    tools: AgentToolDefinition[],
     onDelta: (content: string) => void,
+    onThinking: (content: string) => void,
     signal: AbortSignal,
-  ): Promise<void> {
+  ): Promise<AgentTurn> {
     const endpoint = chatCompletionsEndpoint(configuration.apiBaseUrl);
     const headers: Record<string, string> = {
       Accept: "text/event-stream, application/json",
       "Content-Type": "application/json",
     };
-
     if (apiKey?.trim()) {
       headers.Authorization = `Bearer ${apiKey.trim()}`;
     }
@@ -42,10 +69,15 @@ export class OpenAICompatibleClient {
         headers,
         body: JSON.stringify({
           model: configuration.model,
-          messages,
+          messages: toOpenAIMessages(messages),
+          tools,
+          tool_choice: "auto",
           stream: true,
           ...(configuration.maxOutputTokens > 0
             ? { max_tokens: configuration.maxOutputTokens }
+            : {}),
+          ...(configuration.provider === "openrouter"
+            ? { provider: { require_parameters: true } }
             : {}),
         }),
         signal,
@@ -57,24 +89,53 @@ export class OpenAICompatibleClient {
       const detail = error instanceof Error ? error.message : String(error);
       throw new ApiRequestError(`Could not reach ${endpoint}: ${detail}`);
     }
-
     if (!response.ok) {
       throw await responseError(response);
     }
 
     const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
     if (contentType.includes("text/event-stream") && response.body) {
-      await readEventStream(response.body, onDelta, signal);
-      return;
+      return readEventStream(response.body, onDelta, onThinking, signal);
     }
 
-    const payload = (await response.json()) as ChatCompletionResponse;
-    const content = textContent(payload.choices?.[0]?.message?.content);
-    if (!content) {
-      throw new ApiRequestError("The API returned a response without assistant text.");
+    const message = (await response.json() as ChatCompletionResponse).choices?.[0]?.message;
+    const text = textContent(message?.content);
+    if (text) {
+      onDelta(text);
     }
-    onDelta(content);
+    return {
+      text,
+      toolCalls: (message?.tool_calls ?? []).map((toolCall, index) => ({
+        id: toolCall.id || `tool-${index}`,
+        name: toolCall.function?.name || "",
+        input: parseToolInput(toolCall.function?.arguments || ""),
+      })),
+    };
   }
+}
+
+function toOpenAIMessages(messages: ApiChatMessage[]): Array<Record<string, unknown>> {
+  return messages.map((message) => {
+    if (message.role === "tool") {
+      return { role: "tool", tool_call_id: message.toolCallId, content: message.content };
+    }
+    if (message.role === "assistant") {
+      return {
+        role: "assistant",
+        content: message.content || null,
+        ...(message.toolCalls?.length
+          ? {
+              tool_calls: message.toolCalls.map((toolCall) => ({
+                id: toolCall.id,
+                type: "function",
+                function: { name: toolCall.name, arguments: JSON.stringify(toolCall.input) },
+              })),
+            }
+          : {}),
+      };
+    }
+    return { role: message.role, content: message.content };
+  });
 }
 
 function chatCompletionsEndpoint(baseUrl: string): string {
@@ -82,104 +143,132 @@ function chatCompletionsEndpoint(baseUrl: string): string {
   if (!normalized) {
     throw new ApiRequestError("Set an API base URL in Hyperion settings.");
   }
-  if (
-    normalized.endsWith("/chat/completions") ||
-    normalized.includes("/chat/completions?")
-  ) {
-    return normalized;
-  }
-  return `${normalized}/chat/completions`;
+  return normalized.endsWith("/chat/completions") || normalized.includes("/chat/completions?")
+    ? normalized
+    : `${normalized}/chat/completions`;
 }
 
 async function readEventStream(
   body: ReadableStream<Uint8Array>,
   onDelta: (content: string) => void,
+  onThinking: (content: string) => void,
   signal: AbortSignal,
-): Promise<void> {
+): Promise<AgentTurn> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
+  const calls = new Map<number, AccumulatedToolCall>();
+  let text = "";
   let buffer = "";
-
   try {
     while (true) {
       if (signal.aborted) {
         throw abortError();
       }
-
       const { done, value } = await reader.read();
       if (done) {
         break;
       }
-
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split(/\r?\n/);
       buffer = lines.pop() ?? "";
-
       for (const line of lines) {
-        parseEventLine(line, onDelta);
+        text += parseEventLine(line, onDelta, onThinking, calls);
       }
     }
-
     if (buffer.trim()) {
-      parseEventLine(buffer, onDelta);
+      text += parseEventLine(buffer, onDelta, onThinking, calls);
     }
   } finally {
     reader.releaseLock();
   }
+  return {
+    text,
+    toolCalls: [...calls.values()].map((call) => ({
+      id: call.id,
+      name: call.name,
+      input: parseToolInput(call.arguments),
+    })),
+  };
 }
 
-function parseEventLine(line: string, onDelta: (content: string) => void): void {
+function parseEventLine(
+  line: string,
+  onDelta: (content: string) => void,
+  onThinking: (content: string) => void,
+  calls: Map<number, AccumulatedToolCall>,
+): string {
   if (!line.startsWith("data:")) {
-    return;
+    return "";
   }
-
   const data = line.slice(5).trim();
   if (!data || data === "[DONE]") {
-    return;
+    return "";
   }
-
   let payload: ChatCompletionChunk;
   try {
     payload = JSON.parse(data) as ChatCompletionChunk;
   } catch {
-    return;
+    return "";
   }
-
-  const content = textContent(payload.choices?.[0]?.delta?.content);
+  const delta = payload.choices?.[0]?.delta;
+  const content = textContent(delta?.content);
   if (content) {
     onDelta(content);
+  }
+  const thinking = delta?.reasoning ?? delta?.reasoning_content;
+  if (thinking) onThinking(thinking);
+  for (const toolCall of delta?.tool_calls ?? []) {
+    const index = toolCall.index ?? 0;
+    const current = calls.get(index) ?? {
+      id: toolCall.id || `tool-${index}`,
+      name: toolCall.function?.name || "",
+      arguments: "",
+    };
+    if (toolCall.id) {
+      current.id = toolCall.id;
+    }
+    if (toolCall.function?.name) {
+      current.name = toolCall.function.name;
+    }
+    if (toolCall.function?.arguments) {
+      current.arguments += toolCall.function.arguments;
+    }
+    calls.set(index, current);
+  }
+  return content;
+}
+
+function parseToolInput(raw: string): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
   }
 }
 
 function textContent(content: string | Array<{ text?: string }> | null | undefined): string {
-  if (typeof content === "string") {
-    return content;
-  }
-  if (Array.isArray(content)) {
-    return content.map((part) => part.text ?? "").join("");
-  }
-  return "";
+  return typeof content === "string"
+    ? content
+    : Array.isArray(content)
+      ? content.map((part) => part.text ?? "").join("")
+      : "";
 }
 
 async function responseError(response: Response): Promise<ApiRequestError> {
   const raw = await response.text();
   let message = raw.trim();
-
   try {
-    const payload = JSON.parse(raw) as ChatCompletionResponse;
-    message = payload.error?.message?.trim() || message;
+    message = (JSON.parse(raw) as ChatCompletionResponse).error?.message?.trim() || message;
   } catch {
-    // Non-JSON errors are returned as a concise text excerpt below.
+    // Keep non-JSON server responses as concise text.
   }
-
   if (message.length > 500) {
     message = `${message.slice(0, 500)}…`;
   }
-
-  return new ApiRequestError(
-    message || `The API returned HTTP ${response.status}.`,
-    response.status,
-  );
+  return new ApiRequestError(message || `The API returned HTTP ${response.status}.`, response.status);
 }
 
 function isAbortError(error: unknown): boolean {

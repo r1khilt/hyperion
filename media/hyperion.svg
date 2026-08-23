@@ -1,4 +1,7 @@
 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 10V38M34 10V38M14 24H34" stroke="#C5C5C5" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="24" cy="24" r="5" fill="#C5C5C5"/>
+  <defs><linearGradient id="g" x1="8" y1="6" x2="39" y2="43" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF5D6"/><stop offset=".48" stop-color="#F4C96A"/><stop offset="1" stop-color="#8E6A2A"/></linearGradient></defs>
+  <rect width="48" height="48" rx="12" fill="#09111F"/>
+  <path d="M13 10v28M35 10v28M13 24h22" stroke="url(#g)" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="24" cy="24" r="5.5" fill="#09111F" stroke="url(#g)" stroke-width="2"/>
+  <path d="M24 5.5v4M24 38.5v4M5.5 24h4M38.5 24h4" stroke="#F6D787" stroke-width="1.2" stroke-linecap="round" opacity=".9"/>
 </svg>
