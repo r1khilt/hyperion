@@ -1,6 +1,13 @@
 export type ChatRole = "user" | "assistant";
 export type Provider = "openai-compatible" | "anthropic" | "gmi-cloud" | "openrouter";
-export type OptimizationMode = "balanced" | "cost" | "latency" | "intelligence";
+export type OptimizationMode =
+  | "balanced"
+  | "cost"
+  | "latency"
+  | "intelligence"
+  | "cost-latency"
+  | "cost-intelligence"
+  | "latency-intelligence";
 
 export interface ChatMessage {
   id: string;

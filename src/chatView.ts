@@ -157,15 +157,15 @@ function chatHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
         <textarea id="prompt" rows="1" placeholder="Message Hyperion" aria-label="Chat message"></textarea>
         <div class="composer-footer">
           <input id="file-input" type="file" multiple accept="image/*,.txt,.md,.json,.ts,.tsx,.js,.jsx,.py,.go,.rs,.java,.css,.html,.yml,.yaml" hidden />
-          <button class="attach-button" id="attach" type="button" title="Attach images or text files"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 10.5 4.8-4.8a2.5 2.5 0 1 1 3.5 3.5l-6.6 6.6a4 4 0 0 1-5.7-5.6l6.1-6.1" /></svg><span>Add context</span></button>
+          <button class="attach-button" id="attach" type="button" title="Attach images or text files" aria-label="Add context">+</button>
           <div class="optimization-switch" role="group" aria-label="Response focus">
-            <span class="optimization-label">Optimize</span>
-            <div class="optimization-options" role="radiogroup" aria-label="Optimize for">
-              <button class="optimization-option" type="button" data-optimization-mode="balanced" role="radio" aria-checked="true" title="Balance cost, speed, and quality">Balanced</button>
-              <button class="optimization-option" type="button" data-optimization-mode="cost" role="radio" aria-checked="false" title="Use fewer tokens and tool calls">Cost</button>
-              <button class="optimization-option" type="button" data-optimization-mode="latency" role="radio" aria-checked="false" title="Favor a quicker response">Speed</button>
-              <button class="optimization-option" type="button" data-optimization-mode="intelligence" role="radio" aria-checked="false" title="Favor deeper investigation and validation">Intelligence</button>
+            <span class="optimization-label">Focus</span>
+            <div class="optimization-options" role="group" aria-label="Choose one or more response focuses">
+              <button class="optimization-option" type="button" data-optimization-dimension="cost" aria-pressed="true" title="Use fewer tokens and tool calls">Cost</button>
+              <button class="optimization-option" type="button" data-optimization-dimension="latency" aria-pressed="true" title="Favor a quicker response">Speed</button>
+              <button class="optimization-option" type="button" data-optimization-dimension="intelligence" aria-pressed="true" title="Favor deeper investigation and validation">Intelligence</button>
             </div>
+            <span class="optimization-summary" id="optimization-summary">All three</span>
           </div>
           <button class="key-button" id="api-key" type="button">
             <span class="key-dot" id="key-dot"></span>

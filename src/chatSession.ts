@@ -781,16 +781,10 @@ Use the provided tools to inspect the codebase, make requested changes, and run 
 }
 
 function optimizationInstruction(mode: OptimizationMode): string {
-  switch (mode) {
-    case "cost":
-      return "Response focus: cost efficiency. Keep responses concise, avoid unnecessary tool calls, and use the minimum investigation needed for a reliable answer.";
-    case "latency":
-      return "Response focus: latency. Reach a useful answer quickly, prefer direct actions, and avoid broad exploration or repeated verification unless the user requests it.";
-    case "intelligence":
-      return "Response focus: intelligence. Reason carefully, investigate relevant context, validate important conclusions, and explain material tradeoffs.";
-    case "balanced":
-      return "Response focus: balanced. Balance response quality, latency, and cost based on the task.";
-  }
+  const focus = mode === "balanced" ? [] : mode.split("-");
+  const has = (value: string) => focus.includes(value);
+  if (mode === "balanced") return "Response focus: balanced. Balance cost, speed, and intelligence based on the task.";
+  return `Response focus: ${focus.join(" and ")}. ${has("cost") ? "Keep tool calls and token use efficient. " : ""}${has("latency") ? "Reach a useful answer quickly. " : ""}${has("intelligence") ? "Reason carefully, investigate relevant context, and validate important conclusions." : ""}`.trim();
 }
 
 function isOptimizationMode(value: unknown): value is OptimizationMode {
@@ -798,7 +792,10 @@ function isOptimizationMode(value: unknown): value is OptimizationMode {
     value === "balanced" ||
     value === "cost" ||
     value === "latency" ||
-    value === "intelligence"
+    value === "intelligence" ||
+    value === "cost-latency" ||
+    value === "cost-intelligence" ||
+    value === "latency-intelligence"
   );
 }
 

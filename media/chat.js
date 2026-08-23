@@ -116,9 +116,17 @@ window.addEventListener("keydown", (event) => {
 
 for (const option of elements.optimizationOptions) {
   option.addEventListener("click", () => {
-    if (!state.isGenerating) {
-      vscode.postMessage({ type: "setOptimizationMode", mode: option.dataset.optimizationMode });
-    }
+    if (state.isGenerating) return;
+    const selected = [...elements.optimizationOptions]
+      .filter((candidate) => candidate.getAttribute("aria-pressed") === "true")
+      .map((candidate) => candidate.dataset.optimizationDimension)
+      .filter(Boolean);
+    const dimension = option.dataset.optimizationDimension;
+    if (!dimension) return;
+    const next = selected.includes(dimension)
+      ? selected.filter((value) => value !== dimension)
+      : [...selected, dimension];
+    vscode.postMessage({ type: "setOptimizationMode", mode: optimizationModeFor(next) });
   });
 }
 
@@ -455,11 +463,13 @@ function renderConfiguration() {
     ? "Replace or remove the saved API key"
     : "Set API key";
   for (const option of elements.optimizationOptions) {
-    const selected = option.dataset.optimizationMode === configuration.optimizationMode;
+    const selected = optimizationDimensions(configuration.optimizationMode).includes(option.dataset.optimizationDimension);
     option.classList.toggle("selected", selected);
-    option.setAttribute("aria-checked", String(selected));
+    option.setAttribute("aria-pressed", String(selected));
     option.disabled = state.isGenerating;
   }
+  const selectedCount = optimizationDimensions(configuration.optimizationMode).length;
+  document.getElementById("optimization-summary").textContent = selectedCount === 3 ? "All three" : `${selectedCount} of 3`;
   elements.promptContext.textContent = configuration.systemPrompt || "No system instructions configured.";
   elements.contextMessageCount.textContent = String(state.messages.length);
   elements.contextProviderName.textContent = configuration.providerLabel;
@@ -468,6 +478,19 @@ function renderConfiguration() {
   elements.settingTimeout.value = String(configuration.requestTimeoutSeconds || 120);
   elements.settingThinking.checked = configuration.showThinking !== false;
   elements.settingWorkspaceContext.checked = configuration.includeWorkspaceContext !== false;
+}
+
+function optimizationDimensions(mode) {
+  if (mode === "balanced") return ["cost", "latency", "intelligence"];
+  if (mode === "cost") return ["cost"];
+  if (mode === "latency") return ["latency"];
+  if (mode === "intelligence") return ["intelligence"];
+  return mode.split("-").filter((value) => ["cost", "latency", "intelligence"].includes(value));
+}
+
+function optimizationModeFor(dimensions) {
+  const selected = [...new Set(dimensions)].sort((a, b) => ["cost", "latency", "intelligence"].indexOf(a) - ["cost", "latency", "intelligence"].indexOf(b));
+  return selected.length === 0 || selected.length === 3 ? "balanced" : selected.join("-");
 }
 
 function renderHistory() {
