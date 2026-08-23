@@ -13,19 +13,29 @@
   ],
   "activationEvents": [
     "onCommand:hyperion.openDashboard",
-    "onCommand:hyperion.analyzeWorkspace",
-    "onView:hyperion.overview"
+    "onCommand:hyperion.setApiKey",
+    "onCommand:hyperion.clearChat",
+    "onCommand:hyperion.openSettings",
+    "onView:hyperion.chat"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "hyperion.openDashboard",
-        "title": "Hyperion: Open Dashboard"
+        "title": "Hyperion: Open Chat"
       },
       {
-        "command": "hyperion.analyzeWorkspace",
-        "title": "Hyperion: Analyze Workspace"
+        "command": "hyperion.setApiKey",
+        "title": "Hyperion: Set API Key"
+      },
+      {
+        "command": "hyperion.clearChat",
+        "title": "Hyperion: New Chat"
+      },
+      {
+        "command": "hyperion.openSettings",
+        "title": "Hyperion: Open Settings"
       }
     ],
     "configuration": {
@@ -35,6 +45,28 @@
           "type": "boolean",
           "default": true,
           "description": "Show the Hyperion status bar entry."
+        },
+        "hyperion.apiBaseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com/v1",
+          "description": "Base URL for an OpenAI-compatible API. Hyperion appends /chat/completions unless it is already present."
+        },
+        "hyperion.model": {
+          "type": "string",
+          "default": "gpt-4o-mini",
+          "description": "Model identifier sent to the configured API."
+        },
+        "hyperion.systemPrompt": {
+          "type": "string",
+          "default": "You are a helpful software engineering assistant.",
+          "description": "System prompt included at the beginning of each chat request."
+        },
+        "hyperion.requestTimeoutSeconds": {
+          "type": "number",
+          "default": 120,
+          "minimum": 10,
+          "maximum": 600,
+          "description": "Maximum time in seconds for a chat request."
         }
       }
     },
@@ -50,13 +82,15 @@
     "views": {
       "hyperion": [
         {
-          "id": "hyperion.overview",
-          "name": "Overview"
+          "id": "hyperion.chat",
+          "name": "Chat",
+          "type": "webview"
         }
       ]
     }
   },
   "scripts": {
+    "precompile": "node -e \"require('node:fs').rmSync(require('node:path').join(process.cwd(), 'out'), { recursive: true, force: true })\"",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",

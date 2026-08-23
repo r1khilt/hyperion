@@ -2,6 +2,7 @@
 .git/**
 .gitignore
 src/**
+data/**
 tsconfig.json
 **/*.map
 **/*.ts

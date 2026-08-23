@@ -1,24 +1,32 @@
 import * as vscode from "vscode";
-import { HyperionDashboard } from "./dashboard";
+import { ChatSession } from "./chatSession";
+import { ChatViewProvider } from "./chatView";
 
 const DASHBOARD_COMMAND = "hyperion.openDashboard";
 
 export function activate(context: vscode.ExtensionContext): void {
-  const dashboard = new HyperionDashboard(context.extensionUri);
+  const session = new ChatSession(context);
+  const chatView = new ChatViewProvider(context.extensionUri, session);
 
   context.subscriptions.push(
-    vscode.commands.registerCommand(DASHBOARD_COMMAND, () => dashboard.show()),
-    vscode.commands.registerCommand("hyperion.analyzeWorkspace", () => {
-      dashboard.show();
-      void vscode.window.showInformationMessage(
-        "Workspace analysis is a planned Hyperion capability; no analysis has run.",
-      );
+    session,
+    chatView,
+    vscode.commands.registerCommand(DASHBOARD_COMMAND, () => chatView.show()),
+    vscode.commands.registerCommand("hyperion.setApiKey", () => session.setApiKey()),
+    vscode.commands.registerCommand("hyperion.clearChat", () => session.requestNewChat()),
+    vscode.commands.registerCommand("hyperion.openSettings", () =>
+      vscode.commands.executeCommand(
+        "workbench.action.openSettings",
+        "@ext:hyperion.hyperion",
+      ),
+    ),
+    vscode.window.registerWebviewViewProvider("hyperion.chat", chatView, {
+      webviewOptions: { retainContextWhenHidden: true },
     }),
-    vscode.window.registerWebviewViewProvider("hyperion.overview", {
-      resolveWebviewView(webviewView) {
-        webviewView.webview.options = { enableScripts: false };
-        webviewView.webview.html = dashboard.html();
-      },
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("hyperion")) {
+        session.configurationChanged();
+      }
     }),
   );
 
@@ -27,15 +35,29 @@ export function activate(context: vscode.ExtensionContext): void {
     100,
   );
   statusBar.name = "Hyperion";
-  statusBar.text = "$(sparkle) Hyperion";
-  statusBar.tooltip = "Open the Hyperion dashboard";
+  statusBar.text = "$(comment-discussion) Hyperion";
+  statusBar.tooltip = "Open Hyperion chat";
   statusBar.command = DASHBOARD_COMMAND;
 
   if (vscode.workspace.getConfiguration("hyperion").get<boolean>("showStatusBar", true)) {
     statusBar.show();
   }
 
-  context.subscriptions.push(statusBar);
+  context.subscriptions.push(
+    statusBar,
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (!event.affectsConfiguration("hyperion.showStatusBar")) {
+        return;
+      }
+      if (
+        vscode.workspace.getConfiguration("hyperion").get<boolean>("showStatusBar", true)
+      ) {
+        statusBar.show();
+      } else {
+        statusBar.hide();
+      }
+    }),
+  );
 }
 
 export function deactivate(): void {
